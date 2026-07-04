@@ -19,7 +19,7 @@
   --radius:10px;--mono:'JetBrains Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
 
 /* ACCESS GATE */
 #access-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
@@ -34,66 +34,66 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* APP */
 #app{display:none;flex-direction:column;min-height:100vh;}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 12px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.topbar-brand{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);}
-.topbar-right{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;overflow-x:auto;}
-.tab-btn{background:none;border:none;color:var(--text-muted);font-size:11px;font-weight:500;padding:5px 8px;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 8px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-brand{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;}
+.tab-btn{background:none;border:none;color:var(--text-muted);font-size:10px;font-weight:500;padding:4px 6px;border-radius:6px;cursor:pointer;white-space:nowrap;}
 .tab-btn.active{background:var(--accent-dim);color:var(--accent);}
-.sync-indicator{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--surface2);color:var(--text-muted);white-space:nowrap;}
+.sync-indicator{font-size:10px;padding:2px 6px;border-radius:6px;background:var(--surface2);color:var(--text-muted);white-space:nowrap;}
 .sync-indicator.syncing{color:var(--yellow);}
 .sync-indicator.ok{color:var(--green);}
 .sync-indicator.err{color:var(--red);}
-.tab-content{display:none;padding:12px;flex:1;}
+.tab-content{display:none;padding:8px;flex:1;}
 .tab-content.active{display:block;}
 
 /* SCAN AREA */
-.scan-area{background:var(--surface);border:2px dashed var(--border);border-radius:14px;padding:12px;margin-bottom:10px;}
+.scan-area{background:var(--surface);border:1.5px dashed var(--border);border-radius:10px;padding:8px;margin-bottom:8px;}
 .scan-area.scanning{border-color:var(--accent);border-style:solid;}
-.scan-two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.scan-col-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;}
-.scan-hint{font-size:11px;color:var(--text-muted);margin-top:8px;}
-.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;}
+.scan-two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.scan-col-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
+.scan-hint{display:none;}
+.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
 .fi:focus{border-color:var(--yellow);}
 .fi-mono{font-family:var(--mono);}
 
 /* CUSTOMER AREA */
-#customer-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:10px;}
-.cust-info-bar{display:none;margin-top:8px;padding:7px 10px;background:var(--green-dim);border:1px solid var(--green);border-radius:8px;font-size:13px;align-items:center;justify-content:space-between;gap:8px;}
+#customer-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px;}
+.cust-info-bar{display:none;margin-top:6px;padding:6px 8px;background:var(--green-dim);border:1px solid var(--green);border-radius:7px;font-size:12px;align-items:center;justify-content:space-between;gap:6px;}
 
 /* MANUAL ENTRY */
-#manual-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:10px;}
+#manual-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px;}
 
 /* CART */
-.cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.cart-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
-.btn-clear{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer;}
+.cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.cart-title{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
+.btn-clear{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:10px;padding:3px 7px;border-radius:6px;cursor:pointer;}
 .btn-clear:hover{border-color:var(--red);color:var(--red);}
-.cart-empty{text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;}
-.cart-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;animation:slideIn .15s ease;}
+.cart-empty{text-align:center;padding:20px 0;color:var(--text-muted);font-size:13px;}
+.cart-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;margin-bottom:5px;display:flex;align-items:center;gap:8px;animation:slideIn .15s ease;}
 @keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .item-info{flex:1;min-width:0;}
 .item-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.item-price{font-family:var(--mono);font-size:12px;color:var(--accent);margin-top:1px;}
-.item-barcode{font-family:var(--mono);font-size:10px;color:var(--text-muted);}
-.qty-control{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:2px 3px;}
+.item-price{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:1px;}
+.item-barcode{display:none;}
+.qty-control{display:flex;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:1px 2px;}
 .qty-btn{width:26px;height:26px;background:none;border:none;color:var(--text);font-size:17px;cursor:pointer;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1;}
 .qty-btn:hover{background:var(--surface2);}
-.qty-num{font-family:var(--mono);font-size:14px;font-weight:600;min-width:22px;text-align:center;}
-.item-total{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--green);min-width:72px;text-align:right;}
-.btn-remove{background:none;border:none;color:var(--text-muted);font-size:17px;cursor:pointer;padding:3px;border-radius:5px;line-height:1;}
+.qty-num{font-family:var(--mono);font-size:13px;font-weight:600;min-width:20px;text-align:center;}
+.item-total{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--green);min-width:68px;text-align:right;}
+.btn-remove{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:2px;border-radius:5px;line-height:1;}
 .btn-remove:hover{color:var(--red);background:var(--red-dim);}
 
 /* SUMMARY BAR */
-.summary-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:8px;z-index:50;}
+.summary-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:8px 10px;display:flex;align-items:center;gap:6px;z-index:50;}
 .summary-total{flex:1;}
-.summary-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
-.summary-amount{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);}
-.summary-count{font-size:11px;color:var(--text-muted);}
-.btn-print{background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.summary-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
+.summary-amount{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green);}
+.summary-count{font-size:10px;color:var(--text-muted);}
+.btn-print{background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .btn-print:disabled{opacity:.4;cursor:not-allowed;}
-.btn-save-o{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.btn-save-o{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .btn-save-o:disabled{opacity:.4;cursor:not-allowed;}
-.spacer{height:72px;}
+.spacer{height:64px;}
 
 /* TOAST */
 .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--red-dim);border:1px solid var(--red);color:var(--red);font-size:13px;font-weight:600;padding:8px 18px;border-radius:10px;opacity:0;transition:all .2s;z-index:999;white-space:nowrap;max-width:90vw;text-align:center;}
@@ -176,12 +176,29 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 #camera-video{width:100%;height:100%;object-fit:cover;}
 .camera-crosshair{position:absolute;inset:15% 8%;border:2px solid var(--accent);border-radius:8px;pointer-events:none;box-shadow:0 0 0 2000px rgba(0,0,0,.45);}
 
-/* PRINT */
-@media print{body>*{display:none!important;}#print-area{display:block!important;}}
-#print-area{display:none;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;padding:10px;max-width:300px;}
+/* ORDER SUMMARY */
+.order-summary-bar{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+.order-summary-bar span{color:var(--text-muted);}
+.order-summary-bar b{color:var(--text);font-family:var(--mono);}
+
+/* PRINT 48mm cho FlashLabel Y58BT */
+@media print{
+  body>*{display:none!important;}
+  #print-area{display:block!important;}
+}
+#print-area{
+  display:none;
+  font-family:'Courier New',monospace;
+  font-size:11px;
+  line-height:1.5;
+  padding:2mm;
+  width:48mm;
+  max-width:48mm;
+}
 .print-center{text-align:center;}
-.print-divider{border-top:1px dashed #000;margin:5px 0;}
+.print-divider{border-top:1px dashed #000;margin:3px 0;}
 .print-row{display:flex;justify-content:space-between;}
+.print-name{font-size:10px;word-break:break-all;}
 </style>
 </head>
 <body>
@@ -304,6 +321,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="section-title">Lịch sử đơn hàng</div>
       <button class="btn-add" style="background:var(--red);" onclick="clearAllOrders()">🗑 Xóa tất cả</button>
     </div>
+    <div class="order-summary-bar" id="order-summary-bar">
+      <span>Tổng đơn: <b id="total-orders-count">0</b></span>
+      <span>Tổng sản phẩm: <b id="total-items-count">0</b></span>
+      <span>Doanh thu: <b id="total-revenue">0 ₫</b></span>
+    </div>
     <input class="search-input" type="text" placeholder="Tìm theo tên khách hoặc mã đơn..." oninput="renderOrders(this.value)">
     <div id="order-list"></div>
     <div class="spacer"></div>
@@ -371,8 +393,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="summary-amount" id="summary-amount">0 ₫</div>
       <div class="summary-count" id="summary-count">0 sản phẩm</div>
     </div>
-    <button class="btn-print" id="btn-print" onclick="printReceipt()" disabled>🖨</button>
-    <button class="btn-save-o" id="btn-save-order" onclick="saveOrder()" disabled>💾 Lưu đơn</button>
+    <button class="btn-print" id="btn-print" onclick="printReceipt()" disabled title="In qua Bluetooth">🖨</button>
+    <button class="btn-save-o" id="btn-save-order" onclick="saveOrder()" disabled>💾 Lưu</button>
   </div>
 </div>
 
@@ -705,6 +727,14 @@ function renderOrders(search=''){
   const list=document.getElementById('order-list');
   let f=orders;
   if(search){const q=search.toLowerCase();f=orders.filter(o=>o.id.toLowerCase().includes(q)||o.customer.toLowerCase().includes(q));}
+
+  // Cập nhật thanh tổng
+  const totalItems=f.reduce((s,o)=>s+o.items.reduce((a,i)=>a+i.qty,0),0);
+  const totalRev=f.reduce((s,o)=>s+o.total,0);
+  document.getElementById('total-orders-count').textContent=f.length;
+  document.getElementById('total-items-count').textContent=totalItems;
+  document.getElementById('total-revenue').textContent=fmtPrice(totalRev);
+
   if(!f.length){list.innerHTML='<div class="empty-state">'+(search?'Không tìm thấy':'Chưa có đơn hàng.')+'</div>';return;}
   list.innerHTML=f.map(o=>{
     const ts=new Date(o.time).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -718,11 +748,19 @@ function renderOrders(search=''){
         </div>
         <div style="text-align:right">
           <div class="order-total">${fmtPrice(o.total)}</div>
-          <div class="order-qty">${tq} sp</div>
+          <div class="order-qty">${tq} sản phẩm</div>
         </div>
       </div>
       <div class="order-card-body" id="body-${o.id}">
-        ${o.items.map(item=>`<div class="order-item-row"><span style="flex:1">${item.name}</span><span style="color:var(--text-muted);min-width:40px;text-align:center;">x${item.qty}</span><span style="font-family:var(--mono);color:var(--accent);min-width:75px;text-align:right;">${fmtPrice(item.price*item.qty)}</span></div>`).join('')}
+        ${o.items.map(item=>`<div class="order-item-row">
+          <span style="flex:1;font-size:12px;">${item.name}</span>
+          <span style="color:var(--text-muted);min-width:36px;text-align:center;font-size:12px;">x${item.qty}</span>
+          <span style="font-family:var(--mono);color:var(--accent);min-width:75px;text-align:right;font-size:12px;">${fmtPrice(item.price*item.qty)}</span>
+        </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);margin-top:4px;font-size:12px;">
+          <span style="color:var(--text-muted);">Tổng: <b style="color:var(--text);">${tq} món</b></span>
+          <span style="font-family:var(--mono);font-weight:700;color:var(--green);">${fmtPrice(o.total)}</span>
+        </div>
         <div class="order-actions">
           <button class="btn-order-action" onclick="reprintOrder('${o.id}')">🖨 In lại</button>
           <button class="btn-order-action del" onclick="deleteOrder('${o.id}')">🗑 Xóa</button>
@@ -897,33 +935,45 @@ function saveSettings(){
   showToast('✓ Đã lưu cài đặt','green');
 }
 
-// ===== PRINT =====
+// ===== PRINT (FlashLabel Y58BT - 48mm Bluetooth) =====
 function buildPrintHTML(id,customer,timeStr,items,total){
-  const rows=items.map(item=>`<div>${item.name.length>22?item.name.slice(0,22)+'…':item.name}</div><div class="print-row"><span>${fmtPlain(item.price)} x ${item.qty}</span><span>${fmtPlain(item.price*item.qty)}</span></div><div class="print-divider"></div>`).join('');
+  // Tối ưu cho khổ 48mm ~26 ký tự mỗi dòng
+  const rows=items.map(item=>{
+    const name=item.name.length>20?item.name.slice(0,20)+'…':item.name;
+    const subtotal=fmtPlain(item.price*item.qty);
+    const unitPrice=fmtPlain(item.price);
+    return `<div class="print-name">${name}</div><div class="print-row"><span>${unitPrice}x${item.qty}</span><span>${subtotal}</span></div><div class="print-divider"></div>`;
+  }).join('');
+  const totalQty=items.reduce((s,i)=>s+i.qty,0);
   return `<div class="print-center"><b>${shopInfo.name}</b></div>
-    ${shopInfo.addr?'<div class="print-center">'+shopInfo.addr+'</div>':''}
-    ${shopInfo.phone?'<div class="print-center">ĐT: '+shopInfo.phone+'</div>':''}
+    ${shopInfo.addr?`<div class="print-center" style="font-size:10px">${shopInfo.addr}</div>`:''}
+    ${shopInfo.phone?`<div class="print-center" style="font-size:10px">DT:${shopInfo.phone}</div>`:''}
     <div class="print-divider"></div>
-    <div class="print-center"><b>HÓA ĐƠN BÁN HÀNG</b></div>
-    <div class="print-row"><span>Số: ${id}</span><span>${timeStr}</span></div>
-    <div>Khách: ${customer}</div>
-    <div class="print-divider"></div>${rows}
-    <div class="print-row"><b>TỔNG CỘNG</b><b>${fmtPlain(total)} đ</b></div>
+    <div class="print-center"><b>HOA DON</b></div>
+    <div class="print-row"><span>So:${id}</span><span style="font-size:9px">${timeStr}</span></div>
+    <div style="font-size:10px">KH:${customer}</div>
     <div class="print-divider"></div>
-    <div class="print-center">Cảm ơn quý khách!</div><br><br>`;
+    ${rows}
+    <div class="print-row"><span>SL:${totalQty} mon</span><span></span></div>
+    <div class="print-row"><b>TONG</b><b>${fmtPlain(total)}d</b></div>
+    <div class="print-divider"></div>
+    <div class="print-center">Cam on quy khach!</div>
+    <br>`;
 }
 function printReceipt(){
   if(!cart.length)return;
   const nameRaw=document.getElementById('customer-name').value.trim();
-  const customer=selectedCustomer?selectedCustomer.name:(nameRaw||'Khách lẻ');
+  const customer=selectedCustomer?selectedCustomer.name:(nameRaw||'Khach le');
   const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
-  document.getElementById('print-area').innerHTML=buildPrintHTML('DH'+Date.now().toString().slice(-6),customer,new Date().toLocaleString('vi-VN'),cart,total);
-  window.print();
+  const id='DH'+Date.now().toString().slice(-6);
+  document.getElementById('print-area').innerHTML=buildPrintHTML(id,customer,new Date().toLocaleString('vi-VN'),cart,total);
+  // Kết nối Bluetooth qua Web Print API (Chrome Android hỗ trợ)
+  setTimeout(()=>window.print(),100);
 }
 function reprintOrder(id){
   const o=orders.find(x=>x.id===id);if(!o)return;
   document.getElementById('print-area').innerHTML=buildPrintHTML(o.id,o.customer,new Date(o.time).toLocaleString('vi-VN'),o.items,o.total);
-  window.print();
+  setTimeout(()=>window.print(),100);
 }
 
 // ===== GOOGLE SHEETS SYNC =====
