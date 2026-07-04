@@ -1067,10 +1067,31 @@ document.getElementById('tab-pos').addEventListener('click',function(e){
 
 // ===== SERVICE WORKER =====
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW:',e));
-  });
+  navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW:',e));
 }
+
+let lastLocalUpdate = 0;
+
+async function checkGlobalUpdate() {
+  const url = getGsUrl();
+  if (!url) return;
+  try {
+    const res = await fetch(url + '?action=check').then(r => r.json());
+    if (res.ok && res.lastUpdate > lastLocalUpdate) {
+      if (lastLocalUpdate !== 0) showToast("Dữ liệu mới từ máy khác...", "green");
+      lastLocalUpdate = res.lastUpdate;
+      syncFromSheets(true);
+    } else if (lastLocalUpdate === 0) {
+      lastLocalUpdate = res.lastUpdate;
+    }
+  } catch (e) { console.log("Sync check failed"); }
+}
+
+window.addEventListener('load', () => {
+  if (sessionStorage.getItem('pos_access') === '1') {
+    setInterval(checkGlobalUpdate, 5000);
+  }
+});
 
 renderCart();
 </script>
