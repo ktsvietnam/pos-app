@@ -49,7 +49,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* SCAN AREA */
 .scan-area{background:var(--surface);border:1.5px dashed var(--border);border-radius:10px;padding:8px;margin-bottom:8px;}
 .scan-area.scanning{border-color:var(--accent);border-style:solid;}
-.scan-two-col{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.scan-two-col{display:grid;grid-template-columns:120px 1fr;gap:6px;}
 .scan-col-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
 .scan-hint{display:none;}
 .fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
@@ -351,7 +351,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="section-title">Sản phẩm</div>
       <button class="btn-add" onclick="openProductModal()">+ Thêm</button>
     </div>
-    <input class="search-input" type="text" placeholder="Tìm tên hoặc mã barcode..." oninput="renderProducts(this.value)">
+    <input class="search-input" type="text" id="product-search" placeholder="Tìm tên hoặc mã barcode..." oninput="renderProducts()">
+    <select id="category-filter" onchange="renderProducts()"
+      style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:13px;margin-bottom:10px;outline:none;">
+      <option value="">-- Tất cả danh mục --</option>
+    </select>
     <div id="product-list"></div>
     <div class="spacer"></div>
   </div>
@@ -413,9 +417,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <button onclick="openCameraScannerFor('p-barcode')" title="Quét camera"
           style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);height:44px;width:44px;font-size:18px;cursor:pointer;flex-shrink:0;">📷</button>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 Đặt con trỏ vào ô barcode rồi quét bằng máy USB, hoặc bấm 📷 để quét camera</div>
     </div>
     <div class="modal-field"><div class="field-label">Giá bán (₫)</div><input class="field-input" type="number" id="p-price" style="margin-bottom:0" inputmode="numeric"></div>
+    <div class="modal-field"><div class="field-label">Danh mục</div><input class="field-input" type="text" id="p-category" style="margin-bottom:0" placeholder="VD: Sách lớp 1, Văn phòng phẩm..."></div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeProductModal()">Hủy</button>
       <button class="btn-save" onclick="saveProduct()">Lưu</button>
@@ -447,6 +451,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeImportModal()">Hủy</button>
       <button class="btn-save" onclick="doImport()">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SỬA ĐƠN HÀNG -->
+<div class="modal-overlay" id="edit-order-modal">
+  <div class="modal" style="max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="modal-title" style="margin:0;">✏️ Sửa đơn hàng</div>
+      <button onclick="closeEditOrder()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <input type="hidden" id="edit-order-id">
+    <div class="modal-field">
+      <div class="field-label">Tên khách</div>
+      <input class="field-input" type="text" id="eo-customer" style="margin-bottom:0">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Mã KH</div>
+      <input class="field-input" type="text" id="eo-customer-code" style="margin-bottom:0;font-family:var(--mono);">
+    </div>
+    <div class="field-label" style="margin-bottom:6px;">Sản phẩm <span style="color:var(--text-muted);font-size:10px;">(Tên / SL / Giá)</span></div>
+    <div id="eo-items"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeEditOrder()">Hủy</button>
+      <button class="btn-save" onclick="saveEditOrder()">Lưu đơn</button>
     </div>
   </div>
 </div>
@@ -615,7 +644,7 @@ function onSearchPos(val){
   if(!q){dd.classList.remove('open');dd.innerHTML='';return;}
   const matches=products.filter(p=>p.name.toLowerCase().includes(q)).slice(0,10);
   dd.innerHTML=matches.length
-    ?matches.map(p=>`<div class="dropdown-item" data-id="${p.id}" onmousedown="addProductById('${p.id}')"><span class="dropdown-item-name">${p.name}</span><span style="font-family:var(--mono);font-size:12px;color:var(--accent);white-space:nowrap;">${fmtPrice(p.price)}</span></div>`).join('')
+    ?matches.map(p=>`<div class="dropdown-item" data-id="${p.id}" onmousedown="addProductById('${p.id}')"><span class="dropdown-item-name">${p.name}${p.category?' <span style="font-size:10px;color:var(--text-muted);">['+p.category+']</span>':''}</span></div>`).join('')
     :'<div class="dropdown-empty">Không tìm thấy</div>';
   dd.classList.add('open');
 }
@@ -772,6 +801,7 @@ function renderOrders(search=''){
           <span style="font-family:var(--mono);font-weight:700;color:var(--green);">${fmtPrice(o.total)}</span>
         </div>
         <div class="order-actions">
+          <button class="btn-order-action" onclick="openEditOrder('${o.id}')">✏️ Sửa</button>
           <button class="btn-order-action" onclick="reprintOrder('${o.id}')">🖨 In lại</button>
           <button class="btn-order-action del" onclick="deleteOrder('${o.id}')">🗑 Xóa</button>
         </div>
@@ -781,18 +811,76 @@ function renderOrders(search=''){
 }
 function toggleOrder(id){document.getElementById('body-'+id)?.classList.toggle('open');}
 function deleteOrder(id){
-  if(!confirm('Xóa đơn này?'))return;
-  orders=orders.filter(o=>o.id!==id);
+  const o=orders.find(x=>x.id===id);
+  if(!confirm('Xóa đơn '+o.id+'? Điểm tích lũy sẽ được hoàn lại cho khách.'))return;
+  // Hoàn điểm nếu có KH trong danh sách
+  if(o.customerCode){
+    const cidx=customers.findIndex(c=>c.code===o.customerCode);
+    if(cidx>=0){
+      const pts=customers[cidx].points||0;
+      const added=o.pointsAdded||0;
+      const deducted=o.pointsDeduct||0;
+      // Hoàn lại: trừ đi điểm đã cộng, cộng lại điểm đã trừ
+      customers[cidx].points=Math.max(0, pts - added + deducted);
+      saveCustomers();
+      if(added||deducted) showToast('⭐ Đã hoàn '+(added)+' điểm cho '+customers[cidx].name,'yellow');
+    }
+  }
+  orders=orders.filter(x=>x.id!==id);
   localStorage.setItem('pos_orders',JSON.stringify(orders));
-  renderOrders();showToast('Đã xóa đơn','');
-  scheduleAutoSync();
+  renderOrders();scheduleAutoSync();showToast('Đã xóa đơn','');
 }
 function clearAllOrders(){
   if(!orders.length)return;
-  if(!confirm('Xóa toàn bộ lịch sử đơn hàng?'))return;
+  if(!confirm('Xóa toàn bộ lịch sử đơn hàng? (Điểm tích lũy KHÔNG được hoàn lại)'))return;
   orders=[];localStorage.setItem('pos_orders',JSON.stringify(orders));
   renderOrders();showToast('Đã xóa tất cả đơn','');
 }
+
+// ===== SỬA ĐƠN HÀNG =====
+function openEditOrder(id){
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  document.getElementById('edit-order-id').value=id;
+  document.getElementById('eo-customer').value=o.customer;
+  document.getElementById('eo-customer-code').value=o.customerCode||'';
+  // Render items
+  const cont=document.getElementById('eo-items');
+  cont.innerHTML=o.items.map((item,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 60px 70px 28px;gap:4px;align-items:center;margin-bottom:6px;">
+      <input class="field-input" style="margin:0;font-size:12px;padding:6px 8px;" value="${item.name}" onchange="updateEoItem(${i},'name',this.value)">
+      <input class="field-input" style="margin:0;font-size:12px;padding:6px 8px;font-family:var(--mono);" type="number" value="${item.qty}" min="1" onchange="updateEoItem(${i},'qty',this.value)">
+      <input class="field-input" style="margin:0;font-size:12px;padding:6px 8px;font-family:var(--mono);" type="number" value="${item.price}" onchange="updateEoItem(${i},'price',this.value)">
+      <button onclick="removeEoItem(${i})" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red);border-radius:6px;width:28px;height:34px;cursor:pointer;font-size:14px;">✕</button>
+    </div>`).join('');
+  document.getElementById('edit-order-modal').classList.add('open');
+}
+let eoTempItems=[];
+function updateEoItem(i,field,val){
+  const id=document.getElementById('edit-order-id').value;
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  if(field==='qty')o.items[i].qty=Math.max(1,parseInt(val)||1);
+  else if(field==='price')o.items[i].price=parseInt(val)||0;
+  else o.items[i][field]=val;
+  o.total=o.items.reduce((s,item)=>s+item.price*item.qty,0);
+}
+function removeEoItem(i){
+  const id=document.getElementById('edit-order-id').value;
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  o.items.splice(i,1);
+  o.total=o.items.reduce((s,item)=>s+item.price*item.qty,0);
+  openEditOrder(id);
+}
+function saveEditOrder(){
+  const id=document.getElementById('edit-order-id').value;
+  const idx=orders.findIndex(x=>x.id===id);if(idx<0)return;
+  orders[idx].customer=document.getElementById('eo-customer').value.trim()||orders[idx].customer;
+  orders[idx].customerCode=document.getElementById('eo-customer-code').value.trim();
+  orders[idx].total=orders[idx].items.reduce((s,i)=>s+i.price*i.qty,0);
+  localStorage.setItem('pos_orders',JSON.stringify(orders));
+  document.getElementById('edit-order-modal').classList.remove('open');
+  renderOrders();scheduleAutoSync();showToast('✓ Đã cập nhật đơn hàng','green');
+}
+function closeEditOrder(){document.getElementById('edit-order-modal').classList.remove('open');}
 
 // ===== CUSTOMERS =====
 function renderCustomers(search=''){
@@ -877,15 +965,30 @@ function doImport(){
 }
 
 // ===== PRODUCTS =====
-function renderProducts(search=''){
+function refreshCategoryFilter(){
+  const sel=document.getElementById('category-filter');
+  if(!sel)return;
+  const cur=sel.value;
+  const cats=[...new Set(products.map(p=>p.category||'').filter(Boolean))].sort();
+  sel.innerHTML='<option value="">-- Tất cả danh mục --</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(cats.includes(cur))sel.value=cur;
+}
+function renderProducts(){
+  const search=(document.getElementById('product-search')?.value||'').toLowerCase();
+  const catFilter=(document.getElementById('category-filter')?.value||'');
   const list=document.getElementById('product-list');
   let f=products;
-  if(search){const q=search.toLowerCase();f=products.filter(p=>p.name.toLowerCase().includes(q)||(p.barcode||'').includes(q));}
-  if(!f.length){list.innerHTML='<div class="empty-state">'+(search?'Không tìm thấy':'Chưa có SP. Nhấn <b>+ Thêm</b>.')+'</div>';return;}
+  if(search)f=f.filter(p=>p.name.toLowerCase().includes(search)||(p.barcode||'').includes(search));
+  if(catFilter)f=f.filter(p=>(p.category||'')=== catFilter);
+  refreshCategoryFilter();
+  if(!f.length){list.innerHTML='<div class="empty-state">'+(search||catFilter?'Không tìm thấy':'Chưa có SP. Nhấn <b>+ Thêm</b>.')+'</div>';return;}
   list.innerHTML=`<div class="product-table">
     <div class="product-row header"><span>Tên sản phẩm</span><span style="text-align:right">Giá</span><span></span></div>
     ${f.map(p=>`<div class="product-row">
-      <span style="font-weight:500;">${p.name}</span>
+      <div>
+        <div style="font-weight:500;">${p.name}</div>
+        ${p.category?`<div style="font-size:10px;color:var(--text-muted);">${p.category}</div>`:''}
+      </div>
       <span class="product-price">${fmtPrice(p.price)}</span>
       <span class="product-actions"><button class="btn-icon" onclick="openProductModal('${p.id}')">✏️</button><button class="btn-icon del" onclick="deleteProduct('${p.id}')">🗑</button></span>
     </div>`).join('')}
@@ -897,10 +1000,16 @@ function openProductModal(id=null){
   if(id){
     const p=products.find(x=>x.id===id);
     document.getElementById('modal-title').textContent='Sửa sản phẩm';
-    document.getElementById('p-name').value=p.name;document.getElementById('p-barcode').value=p.barcode||'';document.getElementById('p-price').value=p.price;
+    document.getElementById('p-name').value=p.name;
+    document.getElementById('p-barcode').value=p.barcode||'';
+    document.getElementById('p-price').value=p.price;
+    document.getElementById('p-category').value=p.category||'';
   } else {
     document.getElementById('modal-title').textContent='Thêm sản phẩm';
-    document.getElementById('p-name').value='';document.getElementById('p-barcode').value='';document.getElementById('p-price').value='';
+    document.getElementById('p-name').value='';
+    document.getElementById('p-barcode').value='';
+    document.getElementById('p-price').value='';
+    document.getElementById('p-category').value='';
   }
   setTimeout(()=>document.getElementById('p-name').focus(),100);
 }
@@ -910,10 +1019,11 @@ function saveProduct(){
   const name=document.getElementById('p-name').value.trim();
   const barcode=document.getElementById('p-barcode').value.trim();
   const price=parseInt(document.getElementById('p-price').value);
+  const category=document.getElementById('p-category').value.trim();
   if(!name||!price){showToast('Nhập đủ tên và giá','');return;}
   if(barcode&&products.find(p=>p.barcode===barcode&&p.id!==id)){showToast('Barcode đã tồn tại!','');return;}
-  if(id){const idx=products.findIndex(p=>p.id===id);products[idx]={id,name,barcode,price};}
-  else products.push({id:Date.now().toString(),name,barcode,price});
+  if(id){const idx=products.findIndex(p=>p.id===id);products[idx]={id,name,barcode,price,category};}
+  else products.push({id:Date.now().toString(),name,barcode,price,category});
   saveProducts();renderProducts();closeProductModal();showToast('✓ Đã lưu SP','green');
   scheduleAutoSync();
 }
@@ -1014,8 +1124,8 @@ async function gsCall(params){
   }
 }
 
-function productsToRows(){return[['id','barcode','name','price'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price])];}
-function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0}));}
+function productsToRows(){return[['id','barcode','name','price','category'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.category||''])];}
+function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,category:String(r[4]||'')}));}
 function customersToRows(){return[['id','code','name','phone','addr','points'],...customers.map(c=>[c.id,c.code,c.name,c.phone||'',c.addr||'',c.points||0])];}
 function rowsToCustomers(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),code:String(r[1]),name:String(r[2]),phone:String(r[3]||''),addr:String(r[4]||''),points:Number(r[5])||0}));}
 function ordersToRows(){return[['id','customer','customerCode','time','total','pointsAdded','pointsDeduct','items'],...orders.map(o=>[o.id,o.customer,o.customerCode||'',o.time,o.total,o.pointsAdded||0,o.pointsDeduct||0,JSON.stringify(o.items)])];}
@@ -1128,7 +1238,7 @@ function closeCameraScanner(){
 }
 
 // ===== EVENTS =====
-['product-modal','customer-modal','import-modal'].forEach(id=>{
+['product-modal','customer-modal','import-modal','edit-order-modal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 document.getElementById('camera-modal').addEventListener('click',function(e){if(e.target===this)closeCameraScanner();});
