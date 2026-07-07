@@ -49,7 +49,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* SCAN AREA */
 .scan-area{background:var(--surface);border:1.5px dashed var(--border);border-radius:10px;padding:8px;margin-bottom:8px;}
 .scan-area.scanning{border-color:var(--accent);border-style:solid;}
-.scan-two-col{display:grid;grid-template-columns:120px 1fr;gap:6px;}
+.scan-two-col{display:grid;grid-template-columns:80px 1fr;gap:6px;}
 .scan-col-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
 .scan-hint{display:none;}
 .fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
@@ -75,10 +75,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .item-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .item-price{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:1px;}
 .item-barcode{display:none;}
-.qty-control{display:flex;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:1px 2px;}
+.qty-control{display:flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:1px 2px;}
 .qty-btn{width:26px;height:26px;background:none;border:none;color:var(--text);font-size:17px;cursor:pointer;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1;}
 .qty-btn:hover{background:var(--surface2);}
-.qty-num{font-family:var(--mono);font-size:13px;font-weight:600;min-width:20px;text-align:center;}
+.qty-input{font-family:var(--mono);font-size:13px;font-weight:600;width:36px;text-align:center;background:none;border:none;color:var(--text);outline:none;padding:0;}
+.qty-input:focus{background:var(--surface2);border-radius:4px;}
 .item-total{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--green);min-width:68px;text-align:right;}
 .btn-remove{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:2px;border-radius:5px;line-height:1;}
 .btn-remove:hover{color:var(--red);background:var(--red-dim);}
@@ -122,7 +123,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* TABLES */
 .product-table,.cust-table,.order-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.product-row{display:grid;grid-template-columns:1fr 90px 60px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:6px;}
+.product-row{display:grid;grid-template-columns:1fr 80px 40px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:6px;}
 .product-row:last-child{border-bottom:none;}
 .product-row.header{background:var(--surface2);font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;}
 .product-price{font-family:var(--mono);font-size:12px;color:var(--accent);text-align:right;}
@@ -152,7 +153,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-order-action.del:hover{border-color:var(--red);color:var(--red);}
 
 /* CUSTOMERS */
-.cust-row{display:grid;grid-template-columns:80px 1fr 70px 55px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:6px;}
+.cust-row{display:grid;grid-template-columns:80px 1fr 65px 40px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:6px;}
 .cust-row:last-child{border-bottom:none;}
 .cust-row.header{background:var(--surface2);font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;}
 .cust-code{font-family:var(--mono);color:var(--accent);font-size:11px;}
@@ -261,7 +262,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- Khách hàng -->
     <div id="customer-area">
       <div class="scan-col-label" style="margin-bottom:7px;">👤 Khách hàng</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;margin-bottom:8px;">
         <div class="drop-wrap">
           <input id="customer-code" class="fi fi-mono" type="text" placeholder="Mã KH..."
             autocomplete="off" oninput="onSearchCustomer('code',this.value)" onblur="setTimeout(closeCustDropdown,200)">
@@ -619,7 +620,10 @@ function renderCart(){
       </div>
       <div class="qty-control">
         <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
-        <div class="qty-num">${item.qty}</div>
+        <input class="qty-input" type="number" min="1" value="${item.qty}"
+          onchange="setQty(${i},this.value)"
+          onclick="this.select()"
+          inputmode="numeric">
         <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
       </div>
       <div class="item-total">${fmtPrice(item.price*item.qty)}</div>
@@ -632,6 +636,12 @@ function renderCart(){
   btnP.disabled=false;btnS.disabled=false;
 }
 function changeQty(i,d){cart[i].qty+=d;if(cart[i].qty<=0)cart.splice(i,1);renderCart();}
+function setQty(i,val){
+  const n=parseInt(val);
+  if(isNaN(n)||n<=0){cart.splice(i,1);}
+  else{cart[i].qty=n;}
+  renderCart();
+}
 function removeItem(i){cart.splice(i,1);renderCart();}
 function clearCart(){if(!cart.length)return;if(!confirm('Xóa toàn bộ đơn hàng?'))return;cart=[];renderCart();}
 
@@ -889,12 +899,12 @@ function renderCustomers(search=''){
   if(search){const q=search.toLowerCase();f=customers.filter(c=>c.code.toLowerCase().includes(q)||c.name.toLowerCase().includes(q)||(c.phone||'').includes(q));}
   if(!f.length){list.innerHTML='<div class="empty-state">'+(search?'Không tìm thấy':'Chưa có KH. Nhấn <b>+ Thêm</b> hoặc <b>Import</b>.')+'</div>';return;}
   list.innerHTML=`<div class="cust-table">
-    <div class="cust-row header"><span>Mã KH</span><span>Tên</span><span style="text-align:right">Điểm</span><span></span></div>
+    <div class="cust-row header"><span>Mã KH</span><span>Tên (bấm để sửa)</span><span style="text-align:right">Điểm</span><span></span></div>
     ${f.map(c=>`<div class="cust-row">
       <span class="cust-code">${c.code}</span>
-      <span style="font-weight:500;font-size:13px;">${c.name}</span>
+      <span style="font-weight:500;font-size:13px;cursor:pointer;color:var(--text);" onclick="openCustModal('${c.id}')">${c.name}</span>
       <span class="cust-points">${c.points||0}</span>
-      <span class="cust-actions"><button class="btn-icon" onclick="openCustModal('${c.id}')">✏️</button><button class="btn-icon del" onclick="deleteCustomer('${c.id}')">🗑</button></span>
+      <span class="cust-actions"><button class="btn-icon del" onclick="deleteCustomer('${c.id}')">🗑</button></span>
     </div>`).join('')}
   </div>`;
 }
@@ -916,7 +926,7 @@ function openCustModal(id=null){
   setTimeout(()=>document.getElementById('c-name').focus(),100);
 }
 function closeCustModal(){document.getElementById('customer-modal').classList.remove('open');}
-function saveCustomer(autoSync=false){
+function saveCustomer(){
   const id=document.getElementById('cust-edit-id').value;
   const code=document.getElementById('c-code').value.trim();
   const name=document.getElementById('c-name').value.trim();
@@ -928,14 +938,14 @@ function saveCustomer(autoSync=false){
   if(id){const idx=customers.findIndex(c=>c.id===id);customers[idx]={id,code,name,phone,addr,points};}
   else customers.push({id:Date.now().toString(),code,name,phone,addr,points});
   saveCustomers();renderCustomers();closeCustModal();showToast('✓ Đã lưu khách hàng','green');
-  scheduleAutoSync();
+  syncToSheets(true); // Sync ngay lập tức
 }
 function deleteCustomer(id){
   const c=customers.find(x=>x.id===id);
   if(!confirm('Xóa khách "'+c.name+'"?'))return;
   customers=customers.filter(x=>x.id!==id);
   saveCustomers();renderCustomers();showToast('Đã xóa KH','');
-  scheduleAutoSync();
+  syncToSheets(true);
 }
 function saveCustomers(){localStorage.setItem('pos_customers',JSON.stringify(customers));}
 
@@ -983,14 +993,14 @@ function renderProducts(){
   refreshCategoryFilter();
   if(!f.length){list.innerHTML='<div class="empty-state">'+(search||catFilter?'Không tìm thấy':'Chưa có SP. Nhấn <b>+ Thêm</b>.')+'</div>';return;}
   list.innerHTML=`<div class="product-table">
-    <div class="product-row header"><span>Tên sản phẩm</span><span style="text-align:right">Giá</span><span></span></div>
+    <div class="product-row header"><span>Tên sản phẩm (bấm để sửa)</span><span style="text-align:right">Giá</span><span></span></div>
     ${f.map(p=>`<div class="product-row">
-      <div>
-        <div style="font-weight:500;">${p.name}</div>
+      <div onclick="openProductModal('${p.id}')" style="cursor:pointer;">
+        <div style="font-weight:500;color:var(--text);">${p.name}</div>
         ${p.category?`<div style="font-size:10px;color:var(--text-muted);">${p.category}</div>`:''}
       </div>
       <span class="product-price">${fmtPrice(p.price)}</span>
-      <span class="product-actions"><button class="btn-icon" onclick="openProductModal('${p.id}')">✏️</button><button class="btn-icon del" onclick="deleteProduct('${p.id}')">🗑</button></span>
+      <span class="product-actions"><button class="btn-icon del" onclick="deleteProduct('${p.id}')">🗑</button></span>
     </div>`).join('')}
   </div>`;
 }
@@ -1025,14 +1035,14 @@ function saveProduct(){
   if(id){const idx=products.findIndex(p=>p.id===id);products[idx]={id,name,barcode,price,category};}
   else products.push({id:Date.now().toString(),name,barcode,price,category});
   saveProducts();renderProducts();closeProductModal();showToast('✓ Đã lưu SP','green');
-  scheduleAutoSync();
+  syncToSheets(true); // Sync ngay lập tức
 }
 function deleteProduct(id){
   const p=products.find(x=>x.id===id);
   if(!confirm('Xóa "'+p.name+'"?'))return;
   products=products.filter(x=>x.id!==id);
   saveProducts();renderProducts();showToast('Đã xóa SP','');
-  scheduleAutoSync();
+  syncToSheets(true);
 }
 function saveProducts(){localStorage.setItem('pos_products',JSON.stringify(products));}
 
