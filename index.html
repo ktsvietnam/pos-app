@@ -513,8 +513,9 @@ let customers = JSON.parse(localStorage.getItem('pos_customers') || '[]');
 let cart = [];
 let selectedCustomer = null;
 let shopInfo = JSON.parse(localStorage.getItem('pos_shop') || '{"name":"Cửa hàng của tôi","addr":"","phone":""}');
-let autoSyncTimer = null;
-let pendingPush = false; // true = đang có thay đổi chờ đẩy lên / đang đẩy lên Sheets
+// autoSyncTimer, pendingPush, lastKnownHash, isPolling được khai báo trong khối SYNC bên dưới
+var autoSyncTimer = null;
+var pendingPush = false;
 
 // ===== UTILS =====
 function fmtPrice(n){return new Intl.NumberFormat('vi-VN').format(n)+' ₫';}
@@ -1108,34 +1109,61 @@ function reprintOrder(id){
 // ===== GOOGLE SHEETS SYNC =====
 function getGsUrl(){return(document.getElementById('gs-url')?.value||'').trim()||localStorage.getItem('pos_gs_url')||'';}
 
-// Auto sync scheduler
-function scheduleAutoSync(){
-  if(!getGsUrl())return;
-  clearTimeout(autoSyncTimer);
-  pendingPush=true; // đánh dấu có thay đổi local chưa đẩy lên, để không bị tải-về đè mất
-  setSyncIndicator('syncing','⏳ Chờ sync...');
-  autoSyncTimer=setTimeout(()=>syncToSheets(true),AUTO_SYNC_DELAY);
-}
+// ------- Trạng thái nội bộ -------
+// (autoSyncTimer, pendingPush đã khai báo ở trên với var để dùng được trước khối sync)
+var lastKnownHash   = null;  // hash của dữ liệu lần cuối đã biết → chỉ pull khi hash thay đổi
+var isPolling       = false; // tránh 2 lần checkGlobalUpdate chạy cùng lúc
 
-async function gsCall(params){
-  const url=getGsUrl();
-  if(!url)throw new Error('Chưa có URL');
-  const qs=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  // Thử nhiều cách để tránh CORS
-  try{
-    const res=await fetch(url+'?'+qs,{method:'GET',mode:'cors'});
-    const text=await res.text();
-    return JSON.parse(text);
-  }catch(e1){
-    try{
-      const res=await fetch(url+'?'+qs,{method:'GET',mode:'no-cors'});
-      return {ok:true}; // no-cors không đọc được response
-    }catch(e2){
-      throw new Error('Không kết nối được: '+e1.message);
-    }
+// ------- Gửi HTTP -------
+// Dùng POST + no-cors cho write (tránh CORS, payload không giới hạn độ dài)
+// Dùng GET + cors cho read (cần đọc response)
+async function gsWrite(sheet, rows) {
+  const url = getGsUrl();
+  if (!url) throw new Error('Chưa có URL');
+  const body = JSON.stringify({ action: 'write', sheet, payload: rows });
+  // Thử cors trước (đọc được response lỗi nếu có), fallback no-cors
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'text/plain' }, // text/plain tránh preflight
+      body
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return { ok: true }; }
+  } catch {
+    // fallback no-cors: không đọc được response nhưng request vẫn đến Apps Script
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body
+    });
+    return { ok: true };
   }
 }
 
+async function gsRead(sheet) {
+  const url = getGsUrl();
+  if (!url) throw new Error('Chưa có URL');
+  const res = await fetch(url + '?action=read&sheet=' + encodeURIComponent(sheet), {
+    method: 'GET', mode: 'cors'
+  });
+  const text = await res.text();
+  return JSON.parse(text);
+}
+
+async function gsCheck() {
+  const url = getGsUrl();
+  if (!url) return null;
+  try {
+    const res = await fetch(url + '?action=check', { method: 'GET', mode: 'cors' });
+    const text = await res.text();
+    return JSON.parse(text);
+  } catch { return null; }
+}
+
+// ------- Chuyển đổi dữ liệu -------
 function productsToRows(){return[['id','barcode','name','price','category'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.category||''])];}
 function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,category:String(r[4]||'')}));}
 function customersToRows(){return[['id','code','name','phone','addr','points'],...customers.map(c=>[c.id,c.code,c.name,c.phone||'',c.addr||'',c.points||0])];}
@@ -1143,25 +1171,28 @@ function rowsToCustomers(rows){if(rows.length<2)return[];return rows.slice(1).fi
 function ordersToRows(){return[['id','customer','customerCode','time','total','pointsAdded','pointsDeduct','items'],...orders.map(o=>[o.id,o.customer,o.customerCode||'',o.time,o.total,o.pointsAdded||0,o.pointsDeduct||0,JSON.stringify(o.items)])];}
 function rowsToOrders(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),customer:String(r[1]),customerCode:String(r[2]||''),customerEntered:true,time:String(r[3]),total:Number(r[4])||0,pointsAdded:Number(r[5])||0,pointsDeduct:Number(r[6])||0,items:(()=>{try{return JSON.parse(r[7]);}catch{return[];}})()}));}
 
+// ------- Đẩy lên Sheets (App → Sheet) -------
+// Được gọi tự động mỗi khi lưu/xóa sản phẩm, đơn hàng, khách hàng
 async function syncToSheets(auto=false){
-  const url=getGsUrl();if(!url){if(!auto)showToast('Nhập URL trước!','');return;}
+  const url=getGsUrl();
+  if(!url){if(!auto)showToast('Nhập URL trước!','');return;}
   if(!auto&&!confirm('⚠️ Sẽ ghi đè toàn bộ Sheets bằng dữ liệu trong app. Tiếp tục?'))return;
   clearTimeout(autoSyncTimer);
-  pendingPush=true; // khóa không cho pull-về ghi đè trong lúc đang đẩy lên
+  pendingPush=true;
   setSyncIndicator('syncing','⏳ Đang sync...');
   setSyncStatus('⏳ Đang đẩy lên...','var(--yellow)');
   try{
-    await gsCall({action:'write',sheet:'SanPham',payload:JSON.stringify(productsToRows())});
-    await gsCall({action:'write',sheet:'KhachHang',payload:JSON.stringify(customersToRows())});
-    await gsCall({action:'write',sheet:'DonHang',payload:JSON.stringify(ordersToRows())});
-    // Lưu timestamp đã sync thành công
+    await gsWrite('SanPham', productsToRows());
+    await gsWrite('KhachHang', customersToRows());
+    await gsWrite('DonHang', ordersToRows());
     localStorage.setItem('pos_last_sync', Date.now().toString());
     setSyncIndicator('ok','✅ '+new Date().toLocaleTimeString('vi-VN'));
     setSyncStatus('✅ Đẩy lên OK! '+new Date().toLocaleTimeString('vi-VN'),'var(--green)');
     if(!auto)showToast('✅ Đồng bộ lên Sheets xong!','green');
-    // Cập nhật mốc "lastUpdate" để vòng kiểm tra tiếp theo không tưởng nhầm đây là
-    // thay đổi "mới" đến từ máy khác rồi tự tải lại chính dữ liệu vừa gửi lên.
-    await refreshLastUpdateMarker();
+    // Sau khi đẩy xong: đọc lại hash mới nhất của Sheet để lần poll tiếp theo
+    // không nhầm tưởng đây là "thay đổi từ máy khác" rồi pull về
+    const chk = await gsCheck();
+    if(chk && chk.ok) lastKnownHash = chk.hash || chk.lastUpdate;
   }catch(err){
     setSyncIndicator('err','❌ Sync lỗi');
     setSyncStatus('❌ '+err.message,'var(--red)');
@@ -1171,45 +1202,90 @@ async function syncToSheets(auto=false){
   }
 }
 
+// ------- Tải về từ Sheets (Sheet → App) -------
+// Chỉ gọi khi phát hiện hash thay đổi, hoặc khi người dùng bấm tay
 async function syncFromSheets(auto=false){
-  const url=getGsUrl();if(!url){if(!auto)showToast('Nhập URL trước!','');return;}
-
-  // Nếu auto (khi mở app): chỉ tải về nếu chưa có dữ liệu local hoặc user bấm tay
-  // Không tự động ghi đè khi có dữ liệu local để tránh mất thay đổi chưa sync
-  if(auto){
-    const hasLocal = products.length>0 || customers.length>0 || orders.length>0;
-    const lastSync = localStorage.getItem('pos_last_sync');
-    // Nếu đã có dữ liệu local và đã từng sync thành công → bỏ qua auto load
-    if(hasLocal && lastSync){
-      setSyncIndicator('ok','✅ Local');
-      return;
-    }
-  }
-
+  const url=getGsUrl();
+  if(!url){if(!auto)showToast('Nhập URL trước!','');return;}
+  if(pendingPush && auto) return; // đang có thay đổi local chờ đẩy lên, đợi xong rồi hẵng pull
   setSyncIndicator('syncing','⏳ Tải về...');
   setSyncStatus('⏳ Đang tải về...','var(--yellow)');
   try{
     const[rP,rC,rO]=await Promise.all([
-      gsCall({action:'read',sheet:'SanPham'}),
-      gsCall({action:'read',sheet:'KhachHang'}),
-      gsCall({action:'read',sheet:'DonHang'})
+      gsRead('SanPham'),
+      gsRead('KhachHang'),
+      gsRead('DonHang')
     ]);
     if(rP.ok&&rP.data){products=rowsToProducts(rP.data);saveProducts();}
     if(rC.ok&&rC.data){customers=rowsToCustomers(rC.data);saveCustomers();}
     if(rO.ok&&rO.data){orders=rowsToOrders(rO.data);localStorage.setItem('pos_orders',JSON.stringify(orders));}
     renderProducts();renderCustomers();renderOrders();
+    localStorage.setItem('pos_last_sync', Date.now().toString());
     setSyncIndicator('ok','✅ '+new Date().toLocaleTimeString('vi-VN'));
     setSyncStatus('✅ Tải về OK! '+new Date().toLocaleTimeString('vi-VN'),'var(--green)');
     if(!auto)showToast('✅ Tải về xong!','green');
+    // Cập nhật hash sau khi tải về thành công
+    const chk = await gsCheck();
+    if(chk && chk.ok) lastKnownHash = chk.hash || chk.lastUpdate;
   }catch(err){
     setSyncIndicator('err','❌ Lỗi');
     setSyncStatus('❌ '+err.message,'var(--red)');
     if(!auto)showToast('❌ '+err.message,'');
   }
 }
+
 async function syncToSheetsManual(){await syncToSheets(false);}
 
-// ===== CAMERA =====
+// ------- Lập lịch đẩy lên (debounce 3s) -------
+function scheduleAutoSync(){
+  if(!getGsUrl())return;
+  clearTimeout(autoSyncTimer);
+  pendingPush=true;
+  setSyncIndicator('syncing','⏳ Chờ sync...');
+  autoSyncTimer=setTimeout(()=>syncToSheets(true), AUTO_SYNC_DELAY);
+}
+
+// ------- Poll kiểm tra thay đổi từ Sheets (chỉ HTTP nhẹ, check hash) -------
+// Chỉ pull thật sự khi hash thay đổi, không pull nếu không có gì mới
+async function checkGlobalUpdate(){
+  if(isPolling || pendingPush) return;
+  const url = getGsUrl();
+  if(!url) return;
+  isPolling = true;
+  try{
+    const res = await gsCheck();
+    if(!res || !res.ok) return;
+    const remoteKey = res.hash || res.lastUpdate; // dùng hash nếu Apps Script trả về, fallback timestamp
+    if(lastKnownHash === null){
+      // Lần đầu: ghi nhận trạng thái ban đầu, không pull (dữ liệu local ưu tiên lúc khởi động)
+      lastKnownHash = remoteKey;
+      return;
+    }
+    if(remoteKey !== lastKnownHash){
+      // Hash khác → có thay đổi thật sự từ máy khác hoặc từ Sheet trực tiếp
+      lastKnownHash = remoteKey;
+      showToast('🔄 Phát hiện dữ liệu mới, đang tải...','green');
+      await syncFromSheets(true);
+    }
+    // Hash giống → không có gì mới, không làm gì cả
+  }catch(e){ /* mạng yếu/tạm thời, bỏ qua */ }
+  finally{ isPolling = false; }
+}
+
+// ------- Vòng lặp polling (mỗi 10s, chỉ bắt đầu 1 lần) -------
+let autoPullLoopStarted = false;
+function startAutoPullLoop(){
+  if(autoPullLoopStarted) return;
+  autoPullLoopStarted = true;
+  // Delay 2s sau login mới bắt đầu poll để tránh tranh chấp với syncFromSheets lúc khởi động
+  setTimeout(()=>{
+    checkGlobalUpdate();
+    setInterval(checkGlobalUpdate, 10000); // 10s một lần đủ dùng, không làm chậm máy
+  }, 2000);
+}
+window.addEventListener('load', ()=>{
+  if(sessionStorage.getItem('pos_access')==='1') startAutoPullLoop();
+});
 let cameraStream=null,scanInterval=null,scannerActive=false,cameraTargetId=null;
 
 function openCameraScanner(){openCameraScannerFor('barcode-input');}
@@ -1286,70 +1362,6 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW:',e));
 }
 
-let lastLocalUpdate = 0;
-
-// Cập nhật mốc lastUpdate hiện tại trên Sheets (gọi sau khi mình vừa đẩy dữ liệu lên xong)
-async function refreshLastUpdateMarker(){
-  const url = getGsUrl();
-  if (!url) return;
-  try {
-    const res = await fetch(url + '?action=check').then(r => r.json());
-    if (res.ok) lastLocalUpdate = res.lastUpdate;
-  } catch (e) { /* bỏ qua, lần check tiếp theo sẽ tự cập nhật */ }
-}
-
-// Thực sự tải dữ liệu mới về khi phát hiện Sheets đã thay đổi (do máy khác sửa,
-// hoặc do sửa trực tiếp trên Google Sheet). Không bị chặn bởi điều kiện "đã có local".
-async function pullRemoteUpdate() {
-  if (pendingPush) return; // đang có thay đổi local chờ/đang đẩy lên -> đợi vòng check sau, tránh đè mất
-  const url = getGsUrl();
-  if (!url) return;
-  setSyncIndicator('syncing', '⏳ Có dữ liệu mới...');
-  setSyncStatus('⏳ Đang tải dữ liệu mới từ Sheets...', 'var(--yellow)');
-  try {
-    const [rP, rC, rO] = await Promise.all([
-      gsCall({ action: 'read', sheet: 'SanPham' }),
-      gsCall({ action: 'read', sheet: 'KhachHang' }),
-      gsCall({ action: 'read', sheet: 'DonHang' })
-    ]);
-    if (rP.ok && rP.data) { products = rowsToProducts(rP.data); saveProducts(); }
-    if (rC.ok && rC.data) { customers = rowsToCustomers(rC.data); saveCustomers(); }
-    if (rO.ok && rO.data) { orders = rowsToOrders(rO.data); localStorage.setItem('pos_orders', JSON.stringify(orders)); }
-    renderProducts(); renderCustomers(); renderOrders();
-    localStorage.setItem('pos_last_sync', Date.now().toString());
-    setSyncIndicator('ok', '✅ ' + new Date().toLocaleTimeString('vi-VN'));
-    setSyncStatus('✅ Đã cập nhật dữ liệu mới! ' + new Date().toLocaleTimeString('vi-VN'), 'var(--green)');
-    showToast('🔄 Đã đồng bộ dữ liệu mới từ máy khác', 'green');
-  } catch (err) {
-    setSyncIndicator('err', '❌ Lỗi');
-    setSyncStatus('❌ ' + err.message, 'var(--red)');
-  }
-}
-
-async function checkGlobalUpdate() {
-  const url = getGsUrl();
-  if (!url) return;
-  try {
-    const res = await fetch(url + '?action=check').then(r => r.json());
-    if (res.ok && res.lastUpdate > lastLocalUpdate) {
-      lastLocalUpdate = res.lastUpdate;
-      await pullRemoteUpdate();
-    } else if (res.ok && lastLocalUpdate === 0) {
-      lastLocalUpdate = res.lastUpdate;
-    }
-  } catch (e) { console.log("Sync check failed"); }
-}
-
-let autoPullLoopStarted = false;
-function startAutoPullLoop() {
-  if (autoPullLoopStarted) return; // tránh chạy trùng nhiều vòng lặp
-  autoPullLoopStarted = true;
-  checkGlobalUpdate(); // kiểm tra ngay lập tức, không đợi 5s đầu tiên
-  setInterval(checkGlobalUpdate, 5000); // rồi cứ 5 giây kiểm tra 1 lần, tự động, không cần bấm tay
-}
-window.addEventListener('load', () => {
-  if (sessionStorage.getItem('pos_access') === '1') startAutoPullLoop();
-});
 
 renderCart();
 </script>
