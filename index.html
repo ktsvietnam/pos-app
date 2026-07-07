@@ -374,13 +374,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
       <div style="font-weight:600;margin-bottom:6px;">☁️ Google Sheets</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Tự động đồng bộ sau mỗi thao tác lưu. Cần có mạng.</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Tự động đồng bộ 2 chiều: sửa sản phẩm trong app → đẩy lên Sheet ngay lập tức; Sheet có dữ liệu mới (do máy khác sửa hoặc sửa trực tiếp trên Sheet) → app tự kiểm tra mỗi 5 giây và tự tải về, không cần bấm tay. Cần có mạng.</div>
       <div class="modal-field"><div class="field-label">Apps Script URL</div><input class="field-input" type="text" id="gs-url" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:0;font-size:11px;font-family:var(--mono);"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-        <button class="btn-add" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px;" onclick="syncFromSheets()">⬇️ Tải về</button>
-        <button class="btn-add" style="background:var(--green);padding:9px;" onclick="syncToSheetsManual()">⬆️ Đẩy lên</button>
+        <button class="btn-add" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px;" onclick="syncFromSheets()">⬇️ Tải về (thủ công)</button>
+        <button class="btn-add" style="background:var(--green);padding:9px;" onclick="syncToSheetsManual()">⬆️ Đẩy lên (thủ công)</button>
       </div>
-      <div style="margin-top:8px;font-size:11px;color:var(--yellow);">⚠️ "Đẩy lên" sẽ ghi đè toàn bộ Sheets. "Tải về" khi vừa sửa trực tiếp trên Sheets.</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--yellow);">⚠️ 2 nút trên chỉ dùng khi cần ép buộc đồng bộ ngay hoặc xử lý sự cố — bình thường mọi thứ đã tự động.</div>
       <div id="sync-status" style="margin-top:8px;font-size:12px;display:none;"></div>
     </div>
 
@@ -514,6 +514,7 @@ let cart = [];
 let selectedCustomer = null;
 let shopInfo = JSON.parse(localStorage.getItem('pos_shop') || '{"name":"Cửa hàng của tôi","addr":"","phone":""}');
 let autoSyncTimer = null;
+let pendingPush = false; // true = đang có thay đổi chờ đẩy lên / đang đẩy lên Sheets
 
 // ===== UTILS =====
 function fmtPrice(n){return new Intl.NumberFormat('vi-VN').format(n)+' ₫';}
@@ -553,8 +554,8 @@ async function checkAccess(){
     document.getElementById('app').style.flexDirection='column';
     loadSettings();renderProducts();renderCart();
     setTimeout(()=>document.getElementById('barcode-input').focus(),100);
-    // Auto tải từ Sheets nếu có URL
-    if(getGsUrl()) syncFromSheets(true);
+    // Auto tải từ Sheets nếu có URL, rồi bật vòng lặp tự động đồng bộ 2 chiều
+    if(getGsUrl()){ syncFromSheets(true); startAutoPullLoop(); }
   } else {
     document.getElementById('access-error').style.display='block';
     document.getElementById('access-pw').value='';
@@ -1111,6 +1112,7 @@ function getGsUrl(){return(document.getElementById('gs-url')?.value||'').trim()|
 function scheduleAutoSync(){
   if(!getGsUrl())return;
   clearTimeout(autoSyncTimer);
+  pendingPush=true; // đánh dấu có thay đổi local chưa đẩy lên, để không bị tải-về đè mất
   setSyncIndicator('syncing','⏳ Chờ sync...');
   autoSyncTimer=setTimeout(()=>syncToSheets(true),AUTO_SYNC_DELAY);
 }
@@ -1144,6 +1146,8 @@ function rowsToOrders(rows){if(rows.length<2)return[];return rows.slice(1).filte
 async function syncToSheets(auto=false){
   const url=getGsUrl();if(!url){if(!auto)showToast('Nhập URL trước!','');return;}
   if(!auto&&!confirm('⚠️ Sẽ ghi đè toàn bộ Sheets bằng dữ liệu trong app. Tiếp tục?'))return;
+  clearTimeout(autoSyncTimer);
+  pendingPush=true; // khóa không cho pull-về ghi đè trong lúc đang đẩy lên
   setSyncIndicator('syncing','⏳ Đang sync...');
   setSyncStatus('⏳ Đang đẩy lên...','var(--yellow)');
   try{
@@ -1155,10 +1159,15 @@ async function syncToSheets(auto=false){
     setSyncIndicator('ok','✅ '+new Date().toLocaleTimeString('vi-VN'));
     setSyncStatus('✅ Đẩy lên OK! '+new Date().toLocaleTimeString('vi-VN'),'var(--green)');
     if(!auto)showToast('✅ Đồng bộ lên Sheets xong!','green');
+    // Cập nhật mốc "lastUpdate" để vòng kiểm tra tiếp theo không tưởng nhầm đây là
+    // thay đổi "mới" đến từ máy khác rồi tự tải lại chính dữ liệu vừa gửi lên.
+    await refreshLastUpdateMarker();
   }catch(err){
     setSyncIndicator('err','❌ Sync lỗi');
     setSyncStatus('❌ '+err.message,'var(--red)');
     if(!auto)showToast('❌ '+err.message,'');
+  }finally{
+    pendingPush=false;
   }
 }
 
@@ -1279,25 +1288,67 @@ if('serviceWorker' in navigator){
 
 let lastLocalUpdate = 0;
 
+// Cập nhật mốc lastUpdate hiện tại trên Sheets (gọi sau khi mình vừa đẩy dữ liệu lên xong)
+async function refreshLastUpdateMarker(){
+  const url = getGsUrl();
+  if (!url) return;
+  try {
+    const res = await fetch(url + '?action=check').then(r => r.json());
+    if (res.ok) lastLocalUpdate = res.lastUpdate;
+  } catch (e) { /* bỏ qua, lần check tiếp theo sẽ tự cập nhật */ }
+}
+
+// Thực sự tải dữ liệu mới về khi phát hiện Sheets đã thay đổi (do máy khác sửa,
+// hoặc do sửa trực tiếp trên Google Sheet). Không bị chặn bởi điều kiện "đã có local".
+async function pullRemoteUpdate() {
+  if (pendingPush) return; // đang có thay đổi local chờ/đang đẩy lên -> đợi vòng check sau, tránh đè mất
+  const url = getGsUrl();
+  if (!url) return;
+  setSyncIndicator('syncing', '⏳ Có dữ liệu mới...');
+  setSyncStatus('⏳ Đang tải dữ liệu mới từ Sheets...', 'var(--yellow)');
+  try {
+    const [rP, rC, rO] = await Promise.all([
+      gsCall({ action: 'read', sheet: 'SanPham' }),
+      gsCall({ action: 'read', sheet: 'KhachHang' }),
+      gsCall({ action: 'read', sheet: 'DonHang' })
+    ]);
+    if (rP.ok && rP.data) { products = rowsToProducts(rP.data); saveProducts(); }
+    if (rC.ok && rC.data) { customers = rowsToCustomers(rC.data); saveCustomers(); }
+    if (rO.ok && rO.data) { orders = rowsToOrders(rO.data); localStorage.setItem('pos_orders', JSON.stringify(orders)); }
+    renderProducts(); renderCustomers(); renderOrders();
+    localStorage.setItem('pos_last_sync', Date.now().toString());
+    setSyncIndicator('ok', '✅ ' + new Date().toLocaleTimeString('vi-VN'));
+    setSyncStatus('✅ Đã cập nhật dữ liệu mới! ' + new Date().toLocaleTimeString('vi-VN'), 'var(--green)');
+    showToast('🔄 Đã đồng bộ dữ liệu mới từ máy khác', 'green');
+  } catch (err) {
+    setSyncIndicator('err', '❌ Lỗi');
+    setSyncStatus('❌ ' + err.message, 'var(--red)');
+  }
+}
+
 async function checkGlobalUpdate() {
   const url = getGsUrl();
   if (!url) return;
   try {
     const res = await fetch(url + '?action=check').then(r => r.json());
     if (res.ok && res.lastUpdate > lastLocalUpdate) {
-      if (lastLocalUpdate !== 0) showToast("Dữ liệu mới từ máy khác...", "green");
       lastLocalUpdate = res.lastUpdate;
-      syncFromSheets(true);
-    } else if (lastLocalUpdate === 0) {
+      await pullRemoteUpdate();
+    } else if (res.ok && lastLocalUpdate === 0) {
       lastLocalUpdate = res.lastUpdate;
     }
   } catch (e) { console.log("Sync check failed"); }
 }
 
+let autoPullLoopStarted = false;
+function startAutoPullLoop() {
+  if (autoPullLoopStarted) return; // tránh chạy trùng nhiều vòng lặp
+  autoPullLoopStarted = true;
+  checkGlobalUpdate(); // kiểm tra ngay lập tức, không đợi 5s đầu tiên
+  setInterval(checkGlobalUpdate, 5000); // rồi cứ 5 giây kiểm tra 1 lần, tự động, không cần bấm tay
+}
 window.addEventListener('load', () => {
-  if (sessionStorage.getItem('pos_access') === '1') {
-    setInterval(checkGlobalUpdate, 5000);
-  }
+  if (sessionStorage.getItem('pos_access') === '1') startAutoPullLoop();
 });
 
 renderCart();
