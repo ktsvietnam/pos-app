@@ -1150,6 +1150,8 @@ async function syncToSheets(auto=false){
     await gsCall({action:'write',sheet:'SanPham',payload:JSON.stringify(productsToRows())});
     await gsCall({action:'write',sheet:'KhachHang',payload:JSON.stringify(customersToRows())});
     await gsCall({action:'write',sheet:'DonHang',payload:JSON.stringify(ordersToRows())});
+    // Lưu timestamp đã sync thành công
+    localStorage.setItem('pos_last_sync', Date.now().toString());
     setSyncIndicator('ok','✅ '+new Date().toLocaleTimeString('vi-VN'));
     setSyncStatus('✅ Đẩy lên OK! '+new Date().toLocaleTimeString('vi-VN'),'var(--green)');
     if(!auto)showToast('✅ Đồng bộ lên Sheets xong!','green');
@@ -1162,6 +1164,19 @@ async function syncToSheets(auto=false){
 
 async function syncFromSheets(auto=false){
   const url=getGsUrl();if(!url){if(!auto)showToast('Nhập URL trước!','');return;}
+
+  // Nếu auto (khi mở app): chỉ tải về nếu chưa có dữ liệu local hoặc user bấm tay
+  // Không tự động ghi đè khi có dữ liệu local để tránh mất thay đổi chưa sync
+  if(auto){
+    const hasLocal = products.length>0 || customers.length>0 || orders.length>0;
+    const lastSync = localStorage.getItem('pos_last_sync');
+    // Nếu đã có dữ liệu local và đã từng sync thành công → bỏ qua auto load
+    if(hasLocal && lastSync){
+      setSyncIndicator('ok','✅ Local');
+      return;
+    }
+  }
+
   setSyncIndicator('syncing','⏳ Tải về...');
   setSyncStatus('⏳ Đang tải về...','var(--yellow)');
   try{
