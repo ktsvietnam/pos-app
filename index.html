@@ -161,9 +161,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .cust-actions{display:flex;gap:4px;justify-content:flex-end;}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-start;justify-content:center;padding-top:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:0 0 16px 16px;padding:20px 18px 28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:20px 18px 28px;width:100%;max-width:480px;}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:16px;}
 .modal-field{margin-bottom:14px;}
 .modal-actions{display:flex;gap:8px;margin-top:20px;}
@@ -233,29 +233,35 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <!-- POS TAB -->
   <div id="tab-pos" class="tab-content active">
     <div class="scan-area" id="scan-area">
-      <div style="display:grid;grid-template-columns:80px 1fr;gap:6px;align-items:end;">
+      <div class="scan-two-col">
         <div>
+          <div class="scan-col-label">📷 Barcode USB</div>
           <div style="display:flex;gap:5px;">
-            <input id="barcode-input" class="fi fi-mono" type="text" placeholder="Barcode..."
+            <input id="barcode-input" class="fi fi-mono" type="text" placeholder="Quét hoặc nhập mã..."
               autocomplete="off" onkeydown="handleBarcodeKey(event)"
               onfocus="document.getElementById('scan-area').classList.add('scanning');this.style.borderColor='var(--accent)'"
               onblur="document.getElementById('scan-area').classList.remove('scanning');this.style.borderColor='var(--border)'"
-              style="flex:1;min-width:0;">
+              style="flex:1;">
             <button onclick="openCameraScanner()" title="Quét camera"
-              style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);width:36px;font-size:15px;cursor:pointer;flex-shrink:0;">📷</button>
+              style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);width:40px;font-size:17px;cursor:pointer;flex-shrink:0;">📷</button>
           </div>
         </div>
-        <div class="drop-wrap">
-          <input id="search-pos-input" class="fi" type="text" placeholder="Tìm tên sản phẩm..."
-            autocomplete="off" oninput="onSearchPos(this.value)"
-            onkeydown="onSearchPosKey(event)" onblur="setTimeout(closeProductDropdown,200)">
-          <div class="search-dropdown" id="search-dropdown"></div>
+        <div>
+          <div class="scan-col-label">🔍 Tìm tên</div>
+          <div class="drop-wrap">
+            <input id="search-pos-input" class="fi" type="text" placeholder="Gõ tên sản phẩm..."
+              autocomplete="off" oninput="onSearchPos(this.value)"
+              onkeydown="onSearchPosKey(event)" onblur="setTimeout(closeProductDropdown,200)">
+            <div class="search-dropdown" id="search-dropdown"></div>
+          </div>
         </div>
       </div>
+      <div class="scan-hint">💡 USB: tự Enter sau quét | Camera: bấm 📷 | Tên: gõ chọn từ danh sách</div>
     </div>
 
     <!-- Khách hàng -->
     <div id="customer-area">
+      <div class="scan-col-label" style="margin-bottom:7px;">👤 Khách hàng</div>
       <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;margin-bottom:8px;">
         <div class="drop-wrap">
           <input id="customer-code" class="fi fi-mono" type="text" placeholder="Mã KH..."
@@ -269,17 +275,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div style="display:flex;align-items:center;gap:4px;background:var(--green-dim);border:1px solid var(--green);border-radius:var(--radius);padding:2px 4px;">
-          <button onclick="adjustPoints('add',-1)" style="background:none;border:none;color:var(--green);font-size:20px;font-weight:700;cursor:pointer;padding:0 4px;line-height:1;">−</button>
-          <input id="order-points" class="fi fi-mono" type="number" placeholder="Tích điểm" inputmode="numeric" autocomplete="off"
-            style="border:none;background:transparent;flex:1;min-width:0;text-align:center;color:var(--green);padding:6px 2px;">
-          <button onclick="adjustPoints('add',1)" style="background:none;border:none;color:var(--green);font-size:20px;font-weight:700;cursor:pointer;padding:0 4px;line-height:1;">+</button>
+        <div>
+          <div style="font-size:10px;color:var(--green);margin-bottom:4px;">⭐ Tích điểm (+)</div>
+          <input id="order-points" class="fi fi-mono" type="number" placeholder="VD: 50" inputmode="numeric" autocomplete="off" style="border-color:var(--green-dim);">
         </div>
-        <div style="display:flex;align-items:center;gap:4px;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius);padding:2px 4px;">
-          <button onclick="adjustPoints('deduct',-1)" style="background:none;border:none;color:var(--red);font-size:20px;font-weight:700;cursor:pointer;padding:0 4px;line-height:1;">−</button>
-          <input id="order-points-deduct" class="fi fi-mono" type="number" placeholder="Trừ điểm" inputmode="numeric" autocomplete="off"
-            style="border:none;background:transparent;flex:1;min-width:0;text-align:center;color:var(--red);padding:6px 2px;">
-          <button onclick="adjustPoints('deduct',1)" style="background:none;border:none;color:var(--red);font-size:20px;font-weight:700;cursor:pointer;padding:0 4px;line-height:1;">+</button>
+        <div>
+          <div style="font-size:10px;color:var(--red);margin-bottom:4px;">🎁 Trừ điểm (-)</div>
+          <input id="order-points-deduct" class="fi fi-mono" type="number" placeholder="VD: 100" inputmode="numeric" autocomplete="off" style="border-color:var(--red-dim);">
         </div>
       </div>
       <div class="cust-info-bar" id="selected-customer-info">
@@ -293,21 +295,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
 
-    <!-- Tổng cộng – nằm ngay trên nhập thủ công -->
-    <div id="inline-summary" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
-      <div style="flex:1;">
-        <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;">Tổng cộng</div>
-        <div class="summary-amount" id="summary-amount" style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green);">0 ₫</div>
-        <div id="summary-count" style="font-size:10px;color:var(--text-muted);">0 sản phẩm</div>
-      </div>
-      <button class="btn-print" id="btn-print" onclick="printReceipt()" disabled title="In qua Bluetooth" style="background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;">🖨</button>
-      <button class="btn-save-o" id="btn-save-order" onclick="saveOrder()" disabled style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;">💾 Lưu</button>
-    </div>
-
     <!-- Nhập thủ công -->
     <div id="manual-entry">
+      <div class="scan-col-label" style="margin-bottom:7px;">✏️ Nhập thủ công</div>
       <div style="display:grid;grid-template-columns:1fr 100px 40px;gap:6px;align-items:center;">
-        <input id="manual-name" class="fi" type="text" placeholder="Tên SP (để trống = Cộng thêm)..."
+        <input id="manual-name" class="fi" type="text" placeholder="Tên (để trống = Cộng thêm)..."
           autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('manual-price').focus()">
         <input id="manual-price" class="fi fi-mono" type="number" placeholder="Giá ₫"
           inputmode="numeric" autocomplete="off" onkeydown="if(event.key==='Enter')addManualItem()">
@@ -321,6 +313,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="btn-clear" onclick="clearCart()">Xóa đơn</button>
     </div>
     <div id="cart-list"><div class="cart-empty">Chưa có sản phẩm. Quét barcode để bắt đầu.</div></div>
+    <div class="spacer"></div>
   </div>
 
   <!-- ORDERS TAB -->
@@ -398,13 +391,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <button class="btn-primary" onclick="saveSettings()">Lưu cài đặt</button>
   </div>
 
+  <!-- SUMMARY BAR -->
+  <div class="summary-bar" id="summary-bar">
+    <div class="summary-total">
+      <div class="summary-label">Tổng cộng</div>
+      <div class="summary-amount" id="summary-amount">0 ₫</div>
+      <div class="summary-count" id="summary-count">0 sản phẩm</div>
+    </div>
+    <button class="btn-print" id="btn-print" onclick="printReceipt()" disabled title="In qua Bluetooth">🖨</button>
+    <button class="btn-save-o" id="btn-save-order" onclick="saveOrder()" disabled>💾 Lưu</button>
+  </div>
 </div>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="product-modal">
   <div class="modal">
-    <div class="modal-title" id="modal-title">Thêm sản phẩm</div>
     <input type="hidden" id="edit-id">
+    <div class="modal-field"><div class="field-label">ID sản phẩm</div><input class="field-input" type="text" id="p-id" style="margin-bottom:0;font-family:var(--mono);" placeholder="Tự sinh nếu để trống"></div>
     <div class="modal-field"><div class="field-label">Tên sản phẩm</div><input class="field-input" type="text" id="p-name" style="margin-bottom:0" onkeydown="if(event.key==='Enter')document.getElementById('p-barcode').focus()"></div>
     <div class="modal-field">
       <div class="field-label">Mã Barcode</div>
@@ -417,7 +420,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
     <div class="modal-field"><div class="field-label">Giá bán (₫)</div><input class="field-input" type="number" id="p-price" style="margin-bottom:0" inputmode="numeric"></div>
-    <div class="modal-field"><div class="field-label">Danh mục</div><input class="field-input" type="text" id="p-category" style="margin-bottom:0" placeholder="VD: Sách lớp 1, Văn phòng phẩm..."></div>
+    <div class="modal-field">
+      <div class="field-label">Danh mục</div>
+      <div style="position:relative;">
+        <input class="field-input" type="text" id="p-category" style="margin-bottom:0" placeholder="Nhập hoặc chọn danh mục..."
+          autocomplete="off"
+          oninput="onCategorySuggest(this.value)"
+          onblur="setTimeout(closeCategorySuggest,200)">
+        <div id="category-suggest" class="search-dropdown"></div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeProductModal()">Hủy</button>
       <button class="btn-save" onclick="saveProduct()">Lưu</button>
@@ -427,7 +439,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <div class="modal-overlay" id="customer-modal">
   <div class="modal">
-    <div class="modal-title" id="cust-modal-title">Thêm khách hàng</div>
     <input type="hidden" id="cust-edit-id">
     <div class="modal-field"><div class="field-label">Mã KH</div><input class="field-input" type="text" id="c-code" style="margin-bottom:0;font-family:var(--mono);"></div>
     <div class="modal-field"><div class="field-label">Tên</div><input class="field-input" type="text" id="c-name" style="margin-bottom:0"></div>
@@ -575,6 +586,7 @@ function switchTab(tab,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   btn.classList.add('active');
+  document.getElementById('summary-bar').style.display=tab==='pos'?'flex':'none';
   if(tab==='pos') setTimeout(()=>document.getElementById('barcode-input').focus(),50);
   if(tab==='products') renderProducts();
   if(tab==='orders') renderOrders();
@@ -734,12 +746,6 @@ function closeCustDropdown(){
   document.getElementById('cust-dropdown-code').classList.remove('open');
   document.getElementById('cust-dropdown-name').classList.remove('open');
 }
-function adjustPoints(field,delta){
-  const id=field==='add'?'order-points':'order-points-deduct';
-  const el=document.getElementById(id);
-  const cur=parseInt(el.value)||0;
-  el.value=Math.max(0,cur+delta);
-}
 
 // ===== SAVE ORDER =====
 function saveOrder(){
@@ -748,28 +754,8 @@ function saveOrder(){
   const codeRaw=document.getElementById('customer-code').value.trim();
   const pointsAdded=parseInt(document.getElementById('order-points').value)||0;
   const pointsDeduct=parseInt(document.getElementById('order-points-deduct').value)||0;
-
-  // Nếu chưa select từ danh sách nhưng có nhập mã + tên → tự tạo hoặc tìm KH
-  if(!selectedCustomer && (nameRaw || codeRaw)){
-    // Kiểm tra đã tồn tại chưa (theo mã hoặc tên)
-    let existing = null;
-    if(codeRaw) existing = customers.find(c=>c.code.toLowerCase()===codeRaw.toLowerCase());
-    if(!existing && nameRaw) existing = customers.find(c=>c.name.toLowerCase()===nameRaw.toLowerCase());
-    if(existing){
-      selectedCustomer = existing;
-    } else if(nameRaw && codeRaw){
-      // Tạo KH mới tự động
-      const newCust={id:Date.now().toString(),code:codeRaw,name:nameRaw,phone:'',addr:'',points:0};
-      customers.push(newCust);
-      selectedCustomer=newCust;
-      saveCustomers();
-      showToast('✓ Đã tạo KH mới: '+nameRaw,'green');
-    }
-  }
-
   if(pointsDeduct>0&&!selectedCustomer){showToast('❌ Phải chọn KH từ danh sách để trừ điểm','');return;}
   if(pointsDeduct>0&&selectedCustomer&&(selectedCustomer.points||0)<pointsDeduct){showToast('❌ Khách chỉ có '+(selectedCustomer.points||0)+' điểm','');return;}
-
   let customerDisplay,customerCode,customerEntered;
   if(selectedCustomer){
     customerDisplay=selectedCustomer.name;customerCode=selectedCustomer.code;customerEntered=true;
@@ -779,11 +765,10 @@ function saveOrder(){
       if(pointsAdded>0)np+=pointsAdded;
       if(pointsDeduct>0)np-=pointsDeduct;
       customers[idx].points=np;
-      saveCustomers();
+      saveCustomers(true);
       if(pointsAdded>0)showToast('⭐ +'+pointsAdded+' điểm cho '+selectedCustomer.name,'green');
       if(pointsDeduct>0)showToast('🎁 -'+pointsDeduct+' điểm cho '+selectedCustomer.name,'yellow');
     }
-    scheduleAutoSync(); // đẩy KH mới/cập nhật lên Sheets
   } else {
     customerDisplay=nameRaw||('KH'+Date.now().toString().slice(-6));
     customerCode=codeRaw||'';customerEntered=!!(nameRaw||codeRaw);
@@ -938,12 +923,10 @@ function openCustModal(id=null){
   document.getElementById('cust-edit-id').value=id||'';
   if(id){
     const c=customers.find(x=>x.id===id);
-    document.getElementById('cust-modal-title').textContent='Sửa khách hàng';
     document.getElementById('c-code').value=c.code;document.getElementById('c-name').value=c.name;
     document.getElementById('c-phone').value=c.phone||'';document.getElementById('c-addr').value=c.addr||'';
     document.getElementById('c-points').value=c.points||0;
   } else {
-    document.getElementById('cust-modal-title').textContent='Thêm khách hàng';
     document.getElementById('c-code').value='KH'+String(customers.length+1).padStart(3,'0');
     document.getElementById('c-name').value='';document.getElementById('c-phone').value='';
     document.getElementById('c-addr').value='';document.getElementById('c-points').value='0';
@@ -1004,17 +987,28 @@ function refreshCategoryFilter(){
   const sel=document.getElementById('category-filter');
   if(!sel)return;
   const cur=sel.value;
-  const cats=[...new Set(products.map(p=>p.category||'').filter(Boolean))].sort();
+  // Nhóm theo tên không phân biệt hoa thường, giữ dạng gốc của lần xuất hiện đầu tiên
+  const seen=new Map();
+  products.forEach(p=>{
+    const raw=(p.category||'').trim();
+    if(!raw)return;
+    const key=raw.toLowerCase();
+    if(!seen.has(key))seen.set(key,raw);
+  });
+  const cats=[...seen.values()].sort((a,b)=>a.localeCompare(b,'vi'));
   sel.innerHTML='<option value="">-- Tất cả danh mục --</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-  if(cats.includes(cur))sel.value=cur;
+  // Khôi phục lựa chọn (so sánh không phân biệt hoa thường)
+  const matchOpt=[...sel.options].find(o=>o.value.toLowerCase()===cur.toLowerCase());
+  if(matchOpt)sel.value=matchOpt.value;
 }
 function renderProducts(){
   const search=(document.getElementById('product-search')?.value||'').toLowerCase();
-  const catFilter=(document.getElementById('category-filter')?.value||'');
+  const catFilter=(document.getElementById('category-filter')?.value||'').toLowerCase();
   const list=document.getElementById('product-list');
   let f=products;
   if(search)f=f.filter(p=>p.name.toLowerCase().includes(search)||(p.barcode||'').includes(search));
-  if(catFilter)f=f.filter(p=>(p.category||'')=== catFilter);
+  // Lọc danh mục không phân biệt hoa thường
+  if(catFilter)f=f.filter(p=>(p.category||'').toLowerCase()===catFilter);
   refreshCategoryFilter();
   if(!f.length){list.innerHTML='<div class="empty-state">'+(search||catFilter?'Không tìm thấy':'Chưa có SP. Nhấn <b>+ Thêm</b>.')+'</div>';return;}
   list.innerHTML=`<div class="product-table">
@@ -1032,15 +1026,16 @@ function renderProducts(){
 function openProductModal(id=null){
   document.getElementById('product-modal').classList.add('open');
   document.getElementById('edit-id').value=id||'';
+  closeCategorySuggest();
   if(id){
     const p=products.find(x=>x.id===id);
-    document.getElementById('modal-title').textContent='Sửa sản phẩm';
+    document.getElementById('p-id').value=p.id;
     document.getElementById('p-name').value=p.name;
     document.getElementById('p-barcode').value=p.barcode||'';
     document.getElementById('p-price').value=p.price;
     document.getElementById('p-category').value=p.category||'';
   } else {
-    document.getElementById('modal-title').textContent='Thêm sản phẩm';
+    document.getElementById('p-id').value='';
     document.getElementById('p-name').value='';
     document.getElementById('p-barcode').value='';
     document.getElementById('p-price').value='';
@@ -1048,19 +1043,63 @@ function openProductModal(id=null){
   }
   setTimeout(()=>document.getElementById('p-name').focus(),100);
 }
-function closeProductModal(){document.getElementById('product-modal').classList.remove('open');}
+function closeProductModal(){document.getElementById('product-modal').classList.remove('open');closeCategorySuggest();}
 function saveProduct(){
-  const id=document.getElementById('edit-id').value;
+  const editId=document.getElementById('edit-id').value;
+  const newId=(document.getElementById('p-id').value.trim())||editId||Date.now().toString();
   const name=document.getElementById('p-name').value.trim();
   const barcode=document.getElementById('p-barcode').value.trim();
   const price=parseInt(document.getElementById('p-price').value);
-  const category=document.getElementById('p-category').value.trim();
+  // Normalisasi danh mục: giữ đúng chữ hoa/thường người dùng nhập,
+  // nhưng khi so sánh trùng lặp barcode/ID dùng lowercase
+  const categoryRaw=document.getElementById('p-category').value.trim();
+  // Nếu đã có danh mục cùng tên (không phân biệt hoa thường), dùng tên chuẩn đã có
+  const existingCat=([...new Set(products.map(p=>p.category||'').filter(Boolean))])
+    .find(c=>c.toLowerCase()===categoryRaw.toLowerCase());
+  const category=existingCat||categoryRaw;
+
   if(!name||!price){showToast('Nhập đủ tên và giá','');return;}
-  if(barcode&&products.find(p=>p.barcode===barcode&&p.id!==id)){showToast('Barcode đã tồn tại!','');return;}
-  if(id){const idx=products.findIndex(p=>p.id===id);products[idx]={id,name,barcode,price,category};}
-  else products.push({id:Date.now().toString(),name,barcode,price,category});
+  // Kiểm tra ID trùng (nếu đổi ID)
+  if(newId!==editId&&products.find(p=>p.id===newId)){showToast('ID đã tồn tại!','');return;}
+  if(barcode&&products.find(p=>p.barcode===barcode&&p.id!==editId)){showToast('Barcode đã tồn tại!','');return;}
+
+  if(editId){
+    const idx=products.findIndex(p=>p.id===editId);
+    products[idx]={id:newId,name,barcode,price,category};
+  } else {
+    products.push({id:newId,name,barcode,price,category});
+  }
   saveProducts();renderProducts();closeProductModal();showToast('✓ Đã lưu SP','green');
-  syncToSheets(true); // Sync ngay lập tức
+  syncToSheets(true);
+}
+
+// ===== GỢI Ý DANH MỤC =====
+function onCategorySuggest(val){
+  const q=val.trim().toLowerCase();
+  const dd=document.getElementById('category-suggest');
+  // Lấy danh sách danh mục duy nhất (không phân biệt hoa thường)
+  const seen=new Map();
+  products.forEach(p=>{
+    const raw=(p.category||'').trim();
+    if(!raw)return;
+    const key=raw.toLowerCase();
+    if(!seen.has(key))seen.set(key,raw);
+  });
+  const all=[...seen.values()].sort((a,b)=>a.localeCompare(b,'vi'));
+  const matches=q?all.filter(c=>c.toLowerCase().includes(q)&&c.toLowerCase()!==q):all;
+  if(!matches.length){dd.classList.remove('open');dd.innerHTML='';return;}
+  dd.innerHTML=matches.map(c=>`<div class="dropdown-item" onmousedown="pickCategory('${c.replace(/'/g,"\\'")}')">
+    <span class="dropdown-item-name">${c}</span>
+  </div>`).join('');
+  dd.classList.add('open');
+}
+function pickCategory(cat){
+  document.getElementById('p-category').value=cat;
+  closeCategorySuggest();
+}
+function closeCategorySuggest(){
+  const dd=document.getElementById('category-suggest');
+  if(dd){dd.classList.remove('open');dd.innerHTML='';}
 }
 function deleteProduct(id){
   const p=products.find(x=>x.id===id);
