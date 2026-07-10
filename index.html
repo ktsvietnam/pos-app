@@ -85,7 +85,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-remove:hover{color:var(--red);background:var(--red-dim);}
 
 /* SUMMARY BAR */
-.summary-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:8px 10px;display:flex;align-items:center;gap:6px;z-index:50;}
+.summary-bar{position:static;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;display:flex;align-items:center;gap:6px;margin-bottom:8px;}
 .summary-total{flex:1;}
 .summary-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
 .summary-amount{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green);}
@@ -123,7 +123,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* TABLES */
 .product-table,.cust-table,.order-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.product-row{display:grid;grid-template-columns:1fr 80px 40px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:6px;}
+.product-row{display:grid;grid-template-columns:1fr 42px 75px 40px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:6px;}
 .product-row:last-child{border-bottom:none;}
 .product-row.header{background:var(--surface2);font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;}
 .product-price{font-family:var(--mono);font-size:12px;color:var(--accent);text-align:right;}
@@ -163,9 +163,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center;}
 .modal-overlay.open{display:flex;}
+.modal-overlay.modal-top{align-items:flex-start;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:20px 18px 28px;width:100%;max-width:480px;}
+.modal-overlay.modal-top .modal{border-radius:16px;margin-top:8px;max-height:92vh;overflow-y:auto;}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:16px;}
 .modal-field{margin-bottom:14px;}
+.mf-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.mf-row .field-label{width:78px;flex-shrink:0;margin-bottom:0;font-size:11px;text-align:left;}
+.mf-row .field-input{margin-bottom:0;flex:1;min-width:0;}
 .modal-actions{display:flex;gap:8px;margin-top:20px;}
 .btn-secondary{flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:11px;font-size:13px;font-weight:600;cursor:pointer;}
 .btn-save{flex:2;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:11px;font-size:13px;font-weight:600;cursor:pointer;}
@@ -235,7 +240,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="scan-area" id="scan-area">
       <div class="scan-two-col">
         <div>
-          <div class="scan-col-label">📷 Barcode USB</div>
           <div style="display:flex;gap:5px;">
             <input id="barcode-input" class="fi fi-mono" type="text" placeholder="Quét hoặc nhập mã..."
               autocomplete="off" onkeydown="handleBarcodeKey(event)"
@@ -247,7 +251,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           </div>
         </div>
         <div>
-          <div class="scan-col-label">🔍 Tìm tên</div>
           <div class="drop-wrap">
             <input id="search-pos-input" class="fi" type="text" placeholder="Gõ tên sản phẩm..."
               autocomplete="off" oninput="onSearchPos(this.value)"
@@ -261,7 +264,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <!-- Khách hàng -->
     <div id="customer-area">
-      <div class="scan-col-label" style="margin-bottom:7px;">👤 Khách hàng</div>
       <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;margin-bottom:8px;">
         <div class="drop-wrap">
           <input id="customer-code" class="fi fi-mono" type="text" placeholder="Mã KH..."
@@ -276,12 +278,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <div>
-          <div style="font-size:10px;color:var(--green);margin-bottom:4px;">⭐ Tích điểm (+)</div>
-          <input id="order-points" class="fi fi-mono" type="number" placeholder="VD: 50" inputmode="numeric" autocomplete="off" style="border-color:var(--green-dim);">
+          <input id="order-points" class="fi fi-mono" type="number" placeholder="⭐ Tích điểm" inputmode="numeric" autocomplete="off" style="border-color:var(--green-dim);">
         </div>
         <div>
-          <div style="font-size:10px;color:var(--red);margin-bottom:4px;">🎁 Trừ điểm (-)</div>
-          <input id="order-points-deduct" class="fi fi-mono" type="number" placeholder="VD: 100" inputmode="numeric" autocomplete="off" style="border-color:var(--red-dim);">
+          <input id="order-points-deduct" class="fi fi-mono" type="number" placeholder="🎁 Trừ điểm" inputmode="numeric" autocomplete="off" style="border-color:var(--red-dim);">
         </div>
       </div>
       <div class="cust-info-bar" id="selected-customer-info">
@@ -297,7 +297,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <!-- Nhập thủ công -->
     <div id="manual-entry">
-      <div class="scan-col-label" style="margin-bottom:7px;">✏️ Nhập thủ công</div>
       <div style="display:grid;grid-template-columns:1fr 100px 40px;gap:6px;align-items:center;">
         <input id="manual-name" class="fi" type="text" placeholder="Tên (để trống = Cộng thêm)..."
           autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('manual-price').focus()">
@@ -306,6 +305,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <button onclick="addManualItem()"
           style="background:var(--yellow);color:#000;border:none;border-radius:var(--radius);height:40px;width:40px;font-size:19px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;">+</button>
       </div>
+    </div>
+
+    <!-- TỔNG CỘNG (đưa lên trên) -->
+    <div class="summary-bar" id="summary-bar">
+      <div class="summary-total">
+        <div class="summary-label">Tổng cộng</div>
+        <div class="summary-amount" id="summary-amount">0 ₫</div>
+        <div class="summary-count" id="summary-count">0 sản phẩm</div>
+      </div>
+      <button class="btn-print" id="btn-print" onclick="printReceipt()" disabled title="In qua Bluetooth">🖨</button>
+      <button class="btn-save-o" id="btn-save-order" onclick="saveOrder()" disabled>💾 Lưu</button>
     </div>
 
     <div class="cart-header">
@@ -391,27 +401,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <button class="btn-primary" onclick="saveSettings()">Lưu cài đặt</button>
   </div>
 
-  <!-- SUMMARY BAR -->
-  <div class="summary-bar" id="summary-bar">
-    <div class="summary-total">
-      <div class="summary-label">Tổng cộng</div>
-      <div class="summary-amount" id="summary-amount">0 ₫</div>
-      <div class="summary-count" id="summary-count">0 sản phẩm</div>
-    </div>
-    <button class="btn-print" id="btn-print" onclick="printReceipt()" disabled title="In qua Bluetooth">🖨</button>
-    <button class="btn-save-o" id="btn-save-order" onclick="saveOrder()" disabled>💾 Lưu</button>
-  </div>
 </div>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="product-modal">
+<div class="modal-overlay modal-top" id="product-modal">
   <div class="modal">
     <input type="hidden" id="edit-id">
-    <div class="modal-field"><div class="field-label">ID sản phẩm</div><input class="field-input" type="text" id="p-id" style="margin-bottom:0;font-family:var(--mono);" placeholder="Tự sinh nếu để trống"></div>
-    <div class="modal-field"><div class="field-label">Tên sản phẩm</div><input class="field-input" type="text" id="p-name" style="margin-bottom:0" onkeydown="if(event.key==='Enter')document.getElementById('p-barcode').focus()"></div>
-    <div class="modal-field">
-      <div class="field-label">Mã Barcode</div>
-      <div style="display:flex;gap:6px;align-items:center;">
+    <div class="mf-row"><div class="field-label">ID sản phẩm</div><input class="field-input" type="text" id="p-id" style="font-family:var(--mono);" placeholder="Tự sinh nếu để trống"></div>
+    <div class="mf-row"><div class="field-label">Tên</div><input class="field-input" type="text" id="p-name" onkeydown="if(event.key==='Enter')document.getElementById('p-barcode').focus()"></div>
+    <div class="mf-row">
+      <div class="field-label">Barcode</div>
+      <div style="display:flex;gap:6px;align-items:center;flex:1;min-width:0;">
         <input class="field-input" type="text" id="p-barcode" style="margin-bottom:0;flex:1;font-family:var(--mono);" autocomplete="off"
           placeholder="Quét USB hoặc nhập tay..."
           onkeydown="if(event.key==='Enter')document.getElementById('p-price').focus()">
@@ -419,10 +419,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);height:44px;width:44px;font-size:18px;cursor:pointer;flex-shrink:0;">📷</button>
       </div>
     </div>
-    <div class="modal-field"><div class="field-label">Giá bán (₫)</div><input class="field-input" type="number" id="p-price" style="margin-bottom:0" inputmode="numeric"></div>
-    <div class="modal-field">
+    <div class="mf-row"><div class="field-label">Giá bán (₫)</div><input class="field-input" type="number" id="p-price" inputmode="numeric"></div>
+    <div class="mf-row"><div class="field-label">Tồn kho</div><input class="field-input" type="number" id="p-stock" inputmode="numeric" placeholder="0"></div>
+    <div class="mf-row">
       <div class="field-label">Danh mục</div>
-      <div style="position:relative;">
+      <div style="position:relative;flex:1;min-width:0;">
         <input class="field-input" type="text" id="p-category" style="margin-bottom:0" placeholder="Nhập hoặc chọn danh mục..."
           autocomplete="off"
           oninput="onCategorySuggest(this.value)"
@@ -437,14 +438,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
-<div class="modal-overlay" id="customer-modal">
+<div class="modal-overlay modal-top" id="customer-modal">
   <div class="modal">
     <input type="hidden" id="cust-edit-id">
-    <div class="modal-field"><div class="field-label">Mã KH</div><input class="field-input" type="text" id="c-code" style="margin-bottom:0;font-family:var(--mono);"></div>
-    <div class="modal-field"><div class="field-label">Tên</div><input class="field-input" type="text" id="c-name" style="margin-bottom:0"></div>
-    <div class="modal-field"><div class="field-label">SĐT</div><input class="field-input" type="text" id="c-phone" style="margin-bottom:0" inputmode="tel"></div>
-    <div class="modal-field"><div class="field-label">Địa chỉ</div><input class="field-input" type="text" id="c-addr" style="margin-bottom:0"></div>
-    <div class="modal-field"><div class="field-label">Điểm tích lũy</div><input class="field-input" type="number" id="c-points" style="margin-bottom:0" inputmode="numeric"></div>
+    <div class="mf-row"><div class="field-label">Mã KH</div><input class="field-input" type="text" id="c-code" style="font-family:var(--mono);"></div>
+    <div class="mf-row"><div class="field-label">Tên</div><input class="field-input" type="text" id="c-name"></div>
+    <div class="mf-row"><div class="field-label">SĐT</div><input class="field-input" type="text" id="c-phone" inputmode="tel"></div>
+    <div class="mf-row"><div class="field-label">Địa chỉ</div><input class="field-input" type="text" id="c-addr"></div>
+    <div class="mf-row"><div class="field-label">Điểm</div><input class="field-input" type="number" id="c-points" inputmode="numeric"></div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeCustModal()">Hủy</button>
       <button class="btn-save" onclick="saveCustomer()">Lưu</button>
@@ -775,6 +776,15 @@ function saveOrder(){
   }
   const order={id:'DH'+Date.now().toString().slice(-8),customer:customerDisplay,customerCode,customerEntered,pointsAdded,pointsDeduct,time:new Date().toISOString(),items:cart.map(i=>({...i})),total:cart.reduce((s,i)=>s+i.price*i.qty,0)};
   orders.unshift(order);
+  // Trừ số lượng tồn kho cho các sản phẩm có trong danh mục (bỏ qua mục nhập thủ công)
+  cart.forEach(item=>{
+    if(item.manual)return;
+    const pIdx=products.findIndex(p=>p.id===item.id);
+    if(pIdx>=0){
+      products[pIdx].stock=Math.max(0,(products[pIdx].stock||0)-item.qty);
+    }
+  });
+  saveProducts();renderProducts();
   localStorage.setItem('pos_orders',JSON.stringify(orders));
   showToast('✓ Đã lưu đơn '+order.id,'green');
   cart=[];clearSelectedCustomer();renderCart();
@@ -847,6 +857,15 @@ function deleteOrder(id){
     }
   }
   orders=orders.filter(x=>x.id!==id);
+  // Hoàn lại tồn kho cho các sản phẩm đã bán trong đơn (bỏ qua mục nhập thủ công)
+  o.items.forEach(item=>{
+    if(item.manual)return;
+    const pIdx=products.findIndex(p=>p.id===item.id);
+    if(pIdx>=0){
+      products[pIdx].stock=(products[pIdx].stock||0)+item.qty;
+    }
+  });
+  saveProducts();renderProducts();
   localStorage.setItem('pos_orders',JSON.stringify(orders));
   renderOrders();scheduleAutoSync();showToast('Đã xóa đơn','');
 }
@@ -1012,12 +1031,13 @@ function renderProducts(){
   refreshCategoryFilter();
   if(!f.length){list.innerHTML='<div class="empty-state">'+(search||catFilter?'Không tìm thấy':'Chưa có SP. Nhấn <b>+ Thêm</b>.')+'</div>';return;}
   list.innerHTML=`<div class="product-table">
-    <div class="product-row header"><span>Tên sản phẩm (bấm để sửa)</span><span style="text-align:right">Giá</span><span></span></div>
+    <div class="product-row header"><span>Tên sản phẩm (bấm để sửa)</span><span style="text-align:right">Tồn</span><span style="text-align:right">Giá</span><span></span></div>
     ${f.map(p=>`<div class="product-row">
       <div onclick="openProductModal('${p.id}')" style="cursor:pointer;">
         <div style="font-weight:500;color:var(--text);">${p.name}</div>
         ${p.category?`<div style="font-size:10px;color:var(--text-muted);">${p.category}</div>`:''}
       </div>
+      <span class="product-stock" style="text-align:right;font-family:var(--mono);${(p.stock||0)<=0?'color:var(--red);':'color:var(--text-dim);'}">${p.stock||0}</span>
       <span class="product-price">${fmtPrice(p.price)}</span>
       <span class="product-actions"><button class="btn-icon del" onclick="deleteProduct('${p.id}')">🗑</button></span>
     </div>`).join('')}
@@ -1033,12 +1053,14 @@ function openProductModal(id=null){
     document.getElementById('p-name').value=p.name;
     document.getElementById('p-barcode').value=p.barcode||'';
     document.getElementById('p-price').value=p.price;
+    document.getElementById('p-stock').value=p.stock||0;
     document.getElementById('p-category').value=p.category||'';
   } else {
     document.getElementById('p-id').value='';
     document.getElementById('p-name').value='';
     document.getElementById('p-barcode').value='';
     document.getElementById('p-price').value='';
+    document.getElementById('p-stock').value='0';
     document.getElementById('p-category').value='';
   }
   setTimeout(()=>document.getElementById('p-name').focus(),100);
@@ -1050,6 +1072,7 @@ function saveProduct(){
   const name=document.getElementById('p-name').value.trim();
   const barcode=document.getElementById('p-barcode').value.trim();
   const price=parseInt(document.getElementById('p-price').value);
+  const stock=parseInt(document.getElementById('p-stock').value)||0;
   // Normalisasi danh mục: giữ đúng chữ hoa/thường người dùng nhập,
   // nhưng khi so sánh trùng lặp barcode/ID dùng lowercase
   const categoryRaw=document.getElementById('p-category').value.trim();
@@ -1065,9 +1088,9 @@ function saveProduct(){
 
   if(editId){
     const idx=products.findIndex(p=>p.id===editId);
-    products[idx]={id:newId,name,barcode,price,category};
+    products[idx]={id:newId,name,barcode,price,category,stock};
   } else {
-    products.push({id:newId,name,barcode,price,category});
+    products.push({id:newId,name,barcode,price,category,stock});
   }
   saveProducts();renderProducts();closeProductModal();showToast('✓ Đã lưu SP','green');
   syncToSheets(true);
@@ -1226,8 +1249,8 @@ async function gsCheck() {
 }
 
 // ------- Chuyển đổi dữ liệu -------
-function productsToRows(){return[['id','barcode','name','price','category'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.category||''])];}
-function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,category:String(r[4]||'')}));}
+function productsToRows(){return[['id','barcode','name','price','category','stock'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.category||'',p.stock||0])];}
+function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,category:String(r[4]||''),stock:Number(r[5])||0}));}
 function customersToRows(){return[['id','code','name','phone','addr','points'],...customers.map(c=>[c.id,c.code,c.name,c.phone||'',c.addr||'',c.points||0])];}
 function rowsToCustomers(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),code:String(r[1]),name:String(r[2]),phone:String(r[3]||''),addr:String(r[4]||''),points:Number(r[5])||0}));}
 function ordersToRows(){return[['id','customer','customerCode','time','total','pointsAdded','pointsDeduct','items'],...orders.map(o=>[o.id,o.customer,o.customerCode||'',o.time,o.total,o.pointsAdded||0,o.pointsDeduct||0,JSON.stringify(o.items)])];}
