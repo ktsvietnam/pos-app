@@ -558,7 +558,7 @@ async function checkAccess(){
   const v=document.getElementById('access-pw').value;
   const h=await hashText(v);
   if(h===ACCESS_HASH){
-    sessionStorage.setItem('pos_access','1');
+    localStorage.setItem('pos_access','1');
     document.getElementById('access-gate').style.display='none';
     document.getElementById('app').style.display='flex';
     document.getElementById('app').style.flexDirection='column';
@@ -572,7 +572,7 @@ async function checkAccess(){
   }
 }
 window.addEventListener('DOMContentLoaded',()=>{
-  if(sessionStorage.getItem('pos_access')==='1'){
+  if(localStorage.getItem('pos_access')==='1'){
     document.getElementById('access-gate').style.display='none';
     const app=document.getElementById('app');
     app.style.display='flex';app.style.flexDirection='column';
@@ -1369,7 +1369,7 @@ function startAutoPullLoop(){
   }, 2000);
 }
 window.addEventListener('load', ()=>{
-  if(sessionStorage.getItem('pos_access')==='1') startAutoPullLoop();
+  if(localStorage.getItem('pos_access')==='1') startAutoPullLoop();
 });
 let cameraStream=null,scanInterval=null,scannerActive=false,cameraTargetId=null;
 
