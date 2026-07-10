@@ -1088,9 +1088,12 @@ function saveProduct(){
 
   if(editId){
     const idx=products.findIndex(p=>p.id===editId);
-    products[idx]={id:newId,name,barcode,price,category,stock};
+    // Giữ nguyên costPrice (giá nhập) — trường này do App Nhập hàng quản lý,
+    // POS không hiển thị/sửa nhưng phải mang theo khi ghi lại lên Sheet,
+    // nếu không sẽ vô tình xóa mất giá nhập mà App Nhập hàng đã lưu.
+    products[idx]={id:newId,name,barcode,price,category,stock,costPrice:products[idx].costPrice||0};
   } else {
-    products.push({id:newId,name,barcode,price,category,stock});
+    products.push({id:newId,name,barcode,price,category,stock,costPrice:0});
   }
   saveProducts();renderProducts();closeProductModal();showToast('✓ Đã lưu SP','green');
   syncToSheets(true);
@@ -1249,8 +1252,9 @@ async function gsCheck() {
 }
 
 // ------- Chuyển đổi dữ liệu -------
-function productsToRows(){return[['id','barcode','name','price','category','stock'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.category||'',p.stock||0])];}
-function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,category:String(r[4]||''),stock:Number(r[5])||0}));}
+// Cột thứ 5 "costPrice" (giá nhập) do App Nhập hàng quản lý — POS chỉ đọc/mang theo, không sửa.
+function productsToRows(){return[['id','barcode','name','price','costPrice','category','stock'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.costPrice||0,p.category||'',p.stock||0])];}
+function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,costPrice:Number(r[4])||0,category:String(r[5]||''),stock:Number(r[6])||0}));}
 function customersToRows(){return[['id','code','name','phone','addr','points'],...customers.map(c=>[c.id,c.code,c.name,c.phone||'',c.addr||'',c.points||0])];}
 function rowsToCustomers(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),code:String(r[1]),name:String(r[2]),phone:String(r[3]||''),addr:String(r[4]||''),points:Number(r[5])||0}));}
 function ordersToRows(){return[['id','customer','customerCode','time','total','pointsAdded','pointsDeduct','items'],...orders.map(o=>[o.id,o.customer,o.customerCode||'',o.time,o.total,o.pointsAdded||0,o.pointsDeduct||0,JSON.stringify(o.items)])];}
