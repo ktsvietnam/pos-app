@@ -112,6 +112,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .dropdown-item-name{font-size:13px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dropdown-empty{padding:12px;text-align:center;color:var(--text-muted);font-size:13px;}
 
+/* MULTI-SELECT FILTER BAR */
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.filter-group{position:relative;}
+.filter-toggle{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:500;padding:8px 11px;border-radius:var(--radius);cursor:pointer;white-space:nowrap;}
+.filter-toggle.active{border-color:var(--accent);color:var(--accent);}
+.filter-count{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;line-height:1.4;}
+.filter-panel{min-width:220px;max-width:280px;}
+.filter-panel .dropdown-item{display:flex;align-items:center;gap:8px;}
+.filter-panel .dropdown-item input[type="checkbox"]{width:16px;height:16px;flex-shrink:0;accent-color:var(--accent);cursor:pointer;}
+.filter-clear-btn{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:12px;padding:8px 11px;border-radius:var(--radius);cursor:pointer;}
+.filter-clear-btn:hover{border-color:var(--red);color:var(--red);}
+.filter-chips{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 10px;}
+.filter-chip{display:flex;align-items:center;gap:5px;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:600;padding:4px 6px 4px 10px;border-radius:20px;}
+.filter-chip button{background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;line-height:1;padding:0 2px;}
+
 /* SECTION */
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .section-title{font-size:15px;font-weight:700;}
@@ -185,6 +200,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .camera-frame{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:1/1;}
 #camera-video{width:100%;height:100%;object-fit:cover;}
 .camera-crosshair{position:absolute;inset:15% 8%;border:2px solid var(--accent);border-radius:8px;pointer-events:none;box-shadow:0 0 0 2000px rgba(0,0,0,.45);}
+.camera-continuous-badge{position:absolute;top:8px;left:8px;background:rgba(34,197,94,.9);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.04em;display:none;align-items:center;gap:4px;}
+.camera-continuous-badge.on{display:inline-flex;}
+.camera-continuous-badge .dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:pulseDot 1s infinite;}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
+.camera-scan-count{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;display:none;}
+.camera-scan-count.on{display:inline-block;}
+.btn-stop-scan{width:100%;margin-top:10px;background:var(--red);color:#fff;border:none;border-radius:var(--radius);padding:11px;font-size:14px;font-weight:700;cursor:pointer;display:none;}
+.btn-stop-scan.show{display:block;}
 
 /* ORDER SUMMARY */
 .order-summary-bar{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:12px;}
@@ -250,7 +273,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
               onfocus="document.getElementById('scan-area').classList.add('scanning');this.style.borderColor='var(--accent)'"
               onblur="document.getElementById('scan-area').classList.remove('scanning');this.style.borderColor='var(--border)'"
               style="flex:1;">
-            <button onclick="openCameraScanner()" title="Quét camera"
+            <button onclick="openCameraScannerFor('barcode-input',true)" title="Quét camera liên tục"
               style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);width:40px;font-size:17px;cursor:pointer;flex-shrink:0;">📷</button>
           </div>
         </div>
@@ -367,10 +390,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="btn-add" onclick="openProductModal()">+ Thêm</button>
     </div>
     <input class="search-input" type="text" id="product-search" placeholder="Tìm tên hoặc mã barcode..." oninput="renderProducts()">
-    <select id="category-filter" onchange="renderProducts()"
-      style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:13px;margin-bottom:10px;outline:none;">
-      <option value="">-- Tất cả danh mục --</option>
-    </select>
+    <div class="filter-bar">
+      <div class="filter-group">
+        <button class="filter-toggle" id="category-filter-toggle" onclick="toggleFilterPanel('category')">🏷 Danh mục <span class="filter-count" id="category-filter-count" style="display:none">0</span> ▾</button>
+        <div class="search-dropdown filter-panel" id="category-filter-panel"></div>
+      </div>
+      <div class="filter-group">
+        <button class="filter-toggle" id="brand-filter-toggle" onclick="toggleFilterPanel('brand')">™️ Thương hiệu <span class="filter-count" id="brand-filter-count" style="display:none">0</span> ▾</button>
+        <div class="search-dropdown filter-panel" id="brand-filter-panel"></div>
+      </div>
+      <button class="filter-clear-btn" id="filter-clear-btn" onclick="clearAllFilters()" style="display:none">✕ Xóa lọc</button>
+    </div>
+    <div class="filter-chips" id="filter-chips"></div>
     <div id="product-list"></div>
     <div class="spacer"></div>
   </div>
@@ -433,6 +464,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           oninput="onCategorySuggest(this.value)"
           onblur="setTimeout(closeCategorySuggest,200)">
         <div id="category-suggest" class="search-dropdown"></div>
+      </div>
+    </div>
+    <div class="mf-row">
+      <div class="field-label">Thương hiệu</div>
+      <div style="position:relative;flex:1;min-width:0;">
+        <input class="field-input" type="text" id="p-brand" style="margin-bottom:0" placeholder="Nhập hoặc chọn thương hiệu..."
+          autocomplete="off"
+          oninput="onBrandSuggest(this.value)"
+          onblur="setTimeout(closeBrandSuggest,200)">
+        <div id="brand-suggest" class="search-dropdown"></div>
       </div>
     </div>
     <img id="p-image-preview" class="modal-img-preview" onerror="this.style.display='none'">
@@ -505,9 +546,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="camera-frame">
       <video id="camera-video" playsinline autoplay muted></video>
       <div class="camera-crosshair"></div>
+      <div class="camera-continuous-badge" id="camera-continuous-badge"><span class="dot"></span> QUÉT LIÊN TỤC</div>
+      <div class="camera-scan-count" id="camera-scan-count">Đã quét: 0</div>
     </div>
     <div id="camera-status" style="text-align:center;margin-top:10px;font-size:13px;color:var(--text-muted);">Đưa mã vạch vào khung...</div>
     <div id="camera-result" style="display:none;margin-top:8px;padding:9px 12px;background:var(--green-dim);border:1px solid var(--green);border-radius:8px;text-align:center;color:var(--green);font-weight:600;"></div>
+    <button class="btn-stop-scan" id="camera-stop-btn" onclick="closeCameraScanner()">⏹ Dừng quét</button>
   </div>
 </div>
 
@@ -611,10 +655,11 @@ function handleBarcodeKey(e){
 }
 function processBarcode(code){
   const p=products.find(x=>x.barcode===code);
-  if(!p){showToast('❌ Không tìm thấy: '+code,'');return;}
+  if(!p){showToast('❌ Không tìm thấy: '+code,'');return false;}
   const ex=cart.find(c=>c.barcode===code);
   if(ex)ex.qty++; else cart.push({...p,qty:1});
   renderCart();showToast('✓ '+p.name,'green');
+  return true;
 }
 
 // ===== CART =====
@@ -1008,34 +1053,100 @@ function doImport(){
 }
 
 // ===== PRODUCTS =====
-function refreshCategoryFilter(){
-  const sel=document.getElementById('category-filter');
-  if(!sel)return;
-  const cur=sel.value;
-  // Nhóm theo tên không phân biệt hoa thường, giữ dạng gốc của lần xuất hiện đầu tiên
+// Bộ lọc nhiều lựa chọn: chọn nhiều danh mục / nhiều thương hiệu cùng lúc.
+// Trong cùng 1 nhóm (vd 2 danh mục) là phép OR; giữa 2 nhóm (danh mục & thương hiệu) là phép AND.
+let selectedCategories=new Set(),selectedBrands=new Set();
+function getUniqueValues(field){
   const seen=new Map();
   products.forEach(p=>{
-    const raw=(p.category||'').trim();
+    const raw=(p[field]||'').trim();
     if(!raw)return;
     const key=raw.toLowerCase();
     if(!seen.has(key))seen.set(key,raw);
   });
-  const cats=[...seen.values()].sort((a,b)=>a.localeCompare(b,'vi'));
-  sel.innerHTML='<option value="">-- Tất cả danh mục --</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-  // Khôi phục lựa chọn (so sánh không phân biệt hoa thường)
-  const matchOpt=[...sel.options].find(o=>o.value.toLowerCase()===cur.toLowerCase());
-  if(matchOpt)sel.value=matchOpt.value;
+  return [...seen.values()].sort((a,b)=>a.localeCompare(b,'vi'));
 }
+function toggleFilterPanel(type){
+  const panel=document.getElementById(type+'-filter-panel');
+  const willOpen=!panel.classList.contains('open');
+  document.querySelectorAll('.filter-panel').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.filter-toggle').forEach(b=>b.classList.remove('active'));
+  if(willOpen){
+    renderFilterPanel(type);
+    panel.classList.add('open');
+    document.getElementById(type+'-filter-toggle').classList.add('active');
+  }
+}
+function renderFilterPanel(type){
+  const panel=document.getElementById(type+'-filter-panel');
+  const set=type==='category'?selectedCategories:selectedBrands;
+  const values=getUniqueValues(type);
+  if(!values.length){panel.innerHTML='<div class="dropdown-empty">Chưa có dữ liệu</div>';return;}
+  panel.innerHTML=values.map(v=>`<label class="dropdown-item">
+      <span class="dropdown-item-name">${escapeHtml(v)}</span>
+      <input type="checkbox" ${set.has(v.toLowerCase())?'checked':''} onchange="toggleFilterValue('${type}',this.checked)" data-val="${escapeHtml(v)}">
+    </label>`).join('');
+  // gán lại value gốc (không escape) qua dataset để tránh lỗi ký tự đặc biệt trong onchange
+  [...panel.querySelectorAll('input[type=checkbox]')].forEach((cb,i)=>{cb.dataset.rawVal=values[i];});
+  panel.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange=function(){toggleFilterValue(type,this.dataset.rawVal,this.checked);};
+  });
+}
+function toggleFilterValue(type,value,checked){
+  const set=type==='category'?selectedCategories:selectedBrands;
+  const key=value.toLowerCase();
+  if(checked)set.add(key);else set.delete(key);
+  updateFilterUI();
+  renderProducts();
+}
+function updateFilterUI(){
+  ['category','brand'].forEach(type=>{
+    const set=type==='category'?selectedCategories:selectedBrands;
+    const countEl=document.getElementById(type+'-filter-count');
+    if(set.size>0){countEl.style.display='inline';countEl.textContent=set.size;}
+    else countEl.style.display='none';
+  });
+  document.getElementById('filter-clear-btn').style.display=(selectedCategories.size||selectedBrands.size)?'inline-block':'none';
+  // Render chips hiển thị các lựa chọn hiện tại, cho phép gỡ nhanh từng cái
+  const chipsEl=document.getElementById('filter-chips');
+  const chips=[];
+  const catValues=getUniqueValues('category'),brandValues=getUniqueValues('brand');
+  selectedCategories.forEach(key=>{
+    const label=catValues.find(v=>v.toLowerCase()===key)||key;
+    chips.push({type:'category',key,label:'🏷 '+label});
+  });
+  selectedBrands.forEach(key=>{
+    const label=brandValues.find(v=>v.toLowerCase()===key)||key;
+    chips.push({type:'brand',key,label:'™️ '+label});
+  });
+  chipsEl.innerHTML=chips.map(c=>`<span class="filter-chip">${escapeHtml(c.label)}<button onclick="removeFilterChip('${c.type}','${c.key.replace(/'/g,"\\'")}')">✕</button></span>`).join('');
+}
+function removeFilterChip(type,key){
+  const set=type==='category'?selectedCategories:selectedBrands;
+  set.delete(key);
+  updateFilterUI();renderProducts();
+}
+function clearAllFilters(){
+  selectedCategories.clear();selectedBrands.clear();
+  document.querySelectorAll('.filter-panel').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.filter-toggle').forEach(b=>b.classList.remove('active'));
+  updateFilterUI();renderProducts();
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.filter-group')){
+    document.querySelectorAll('.filter-panel').forEach(p=>p.classList.remove('open'));
+    document.querySelectorAll('.filter-toggle').forEach(b=>b.classList.remove('active'));
+  }
+});
 function renderProducts(){
   const search=(document.getElementById('product-search')?.value||'').toLowerCase();
-  const catFilter=(document.getElementById('category-filter')?.value||'').toLowerCase();
   const list=document.getElementById('product-list');
   let f=products;
   if(search)f=f.filter(p=>p.name.toLowerCase().includes(search)||(p.barcode||'').includes(search));
-  // Lọc danh mục không phân biệt hoa thường
-  if(catFilter)f=f.filter(p=>(p.category||'').toLowerCase()===catFilter);
-  refreshCategoryFilter();
-  if(!f.length){list.innerHTML='<div class="empty-state">'+(search||catFilter?'Không tìm thấy':'Chưa có SP. Nhấn <b>+ Thêm</b>.')+'</div>';return;}
+  if(selectedCategories.size)f=f.filter(p=>selectedCategories.has((p.category||'').trim().toLowerCase()));
+  if(selectedBrands.size)f=f.filter(p=>selectedBrands.has((p.brand||'').trim().toLowerCase()));
+  const hasFilter=search||selectedCategories.size||selectedBrands.size;
+  if(!f.length){list.innerHTML='<div class="empty-state">'+(hasFilter?'Không tìm thấy':'Chưa có SP. Nhấn <b>+ Thêm</b>.')+'</div>';return;}
   list.innerHTML=`<div class="product-table">
     <div class="product-row header"><span>Tên sản phẩm (bấm để sửa)</span><span style="text-align:right">Tồn</span><span style="text-align:right">Giá</span><span></span></div>
     ${f.map(p=>`<div class="product-row">
@@ -1043,7 +1154,7 @@ function renderProducts(){
         ${p.image?`<img src="${escapeHtml(p.image)}" class="product-thumb" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'product-thumb-placeholder',textContent:'📦'}))">`:'<div class="product-thumb-placeholder">📦</div>'}
         <div style="min-width:0;">
           <div style="font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
-          ${p.category?`<div style="font-size:10px;color:var(--text-muted);">${p.category}</div>`:''}
+          ${(p.category||p.brand)?`<div style="font-size:10px;color:var(--text-muted);">${[p.category,p.brand].filter(Boolean).join(' · ')}</div>`:''}
         </div>
       </div>
       <span class="product-stock" style="text-align:right;font-family:var(--mono);${(p.stock||0)<=0?'color:var(--red);':'color:var(--text-dim);'}">${p.stock||0}</span>
@@ -1064,6 +1175,7 @@ function openProductModal(id=null){
     document.getElementById('p-price').value=p.price;
     document.getElementById('p-stock').value=p.stock||0;
     document.getElementById('p-category').value=p.category||'';
+    document.getElementById('p-brand').value=p.brand||'';
     document.getElementById('p-image').value=p.image||'';
     updateProductImagePreview(p.image||'');
   } else {
@@ -1073,6 +1185,7 @@ function openProductModal(id=null){
     document.getElementById('p-price').value='';
     document.getElementById('p-stock').value='0';
     document.getElementById('p-category').value='';
+    document.getElementById('p-brand').value='';
     document.getElementById('p-image').value='';
     updateProductImagePreview('');
   }
@@ -1102,6 +1215,10 @@ function saveProduct(){
   const existingCat=([...new Set(products.map(p=>p.category||'').filter(Boolean))])
     .find(c=>c.toLowerCase()===categoryRaw.toLowerCase());
   const category=existingCat||categoryRaw;
+  const brandRaw=document.getElementById('p-brand').value.trim();
+  const existingBrand=([...new Set(products.map(p=>p.brand||'').filter(Boolean))])
+    .find(b=>b.toLowerCase()===brandRaw.toLowerCase());
+  const brand=existingBrand||brandRaw;
 
   if(!name||!price){showToast('Nhập đủ tên và giá','');return;}
   // Kiểm tra ID trùng (nếu đổi ID)
@@ -1113,9 +1230,9 @@ function saveProduct(){
     // Giữ nguyên costPrice (giá nhập) và discount — các trường này do App Nhập hàng quản lý,
     // POS không hiển thị/sửa nhưng phải mang theo khi ghi lại lên Sheet,
     // nếu không sẽ vô tình xóa mất dữ liệu mà App Nhập hàng đã lưu.
-    products[idx]={id:newId,name,barcode,price,category,stock,image,costPrice:products[idx].costPrice||0,discount:products[idx].discount||0};
+    products[idx]={id:newId,name,barcode,price,category,brand,stock,image,costPrice:products[idx].costPrice||0,discount:products[idx].discount||0};
   } else {
-    products.push({id:newId,name,barcode,price,category,stock,image,costPrice:0,discount:0});
+    products.push({id:newId,name,barcode,price,category,brand,stock,image,costPrice:0,discount:0});
   }
   saveProducts();renderProducts();closeProductModal();showToast('✓ Đã lưu SP','green');
   syncToSheets(true);
@@ -1147,6 +1264,34 @@ function pickCategory(cat){
 }
 function closeCategorySuggest(){
   const dd=document.getElementById('category-suggest');
+  if(dd){dd.classList.remove('open');dd.innerHTML='';}
+}
+
+// ===== GỢI Ý THƯƠNG HIỆU =====
+function onBrandSuggest(val){
+  const q=val.trim().toLowerCase();
+  const dd=document.getElementById('brand-suggest');
+  const seen=new Map();
+  products.forEach(p=>{
+    const raw=(p.brand||'').trim();
+    if(!raw)return;
+    const key=raw.toLowerCase();
+    if(!seen.has(key))seen.set(key,raw);
+  });
+  const all=[...seen.values()].sort((a,b)=>a.localeCompare(b,'vi'));
+  const matches=q?all.filter(b=>b.toLowerCase().includes(q)&&b.toLowerCase()!==q):all;
+  if(!matches.length){dd.classList.remove('open');dd.innerHTML='';return;}
+  dd.innerHTML=matches.map(b=>`<div class="dropdown-item" onmousedown="pickBrand('${b.replace(/'/g,"\\'")}')">
+    <span class="dropdown-item-name">${b}</span>
+  </div>`).join('');
+  dd.classList.add('open');
+}
+function pickBrand(b){
+  document.getElementById('p-brand').value=b;
+  closeBrandSuggest();
+}
+function closeBrandSuggest(){
+  const dd=document.getElementById('brand-suggest');
   if(dd){dd.classList.remove('open');dd.innerHTML='';}
 }
 function deleteProduct(id){
@@ -1275,8 +1420,8 @@ async function gsCheck() {
 
 // ------- Chuyển đổi dữ liệu -------
 // Cột thứ 5 "costPrice" (giá nhập) do App Nhập hàng quản lý — POS chỉ đọc/mang theo, không sửa.
-function productsToRows(){return[['id','barcode','name','price','costPrice','discount','category','stock','image'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.costPrice||0,p.discount||0,p.category||'',p.stock||0,p.image||''])];}
-function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,costPrice:Number(r[4])||0,discount:Number(r[5])||0,category:String(r[6]||''),stock:Number(r[7])||0,image:String(r[8]||'')}));}
+function productsToRows(){return[['id','barcode','name','price','costPrice','discount','category','stock','image','brand'],...products.map(p=>[p.id,p.barcode||'',p.name,p.price,p.costPrice||0,p.discount||0,p.category||'',p.stock||0,p.image||'',p.brand||''])];}
+function rowsToProducts(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),barcode:String(r[1]||''),name:String(r[2]),price:Number(r[3])||0,costPrice:Number(r[4])||0,discount:Number(r[5])||0,category:String(r[6]||''),stock:Number(r[7])||0,image:String(r[8]||''),brand:String(r[9]||'')}));}
 function customersToRows(){return[['id','code','name','phone','addr','points'],...customers.map(c=>[c.id,c.code,c.name,c.phone||'',c.addr||'',c.points||0])];}
 function rowsToCustomers(rows){if(rows.length<2)return[];return rows.slice(1).filter(r=>r[0]).map(r=>({id:String(r[0]),code:String(r[1]),name:String(r[2]),phone:String(r[3]||''),addr:String(r[4]||''),points:Number(r[5])||0}));}
 function ordersToRows(){return[['id','customer','customerCode','time','total','pointsAdded','pointsDeduct','items'],...orders.map(o=>[o.id,o.customer,o.customerCode||'',o.time,o.total,o.pointsAdded||0,o.pointsDeduct||0,JSON.stringify(o.items)])];}
@@ -1398,14 +1543,21 @@ window.addEventListener('load', ()=>{
   if(localStorage.getItem('pos_access')==='1') startAutoPullLoop();
 });
 let cameraStream=null,scanInterval=null,scannerActive=false,cameraTargetId=null;
+let continuousMode=false,scanCount=0,lastScannedCode=null,lastScannedTime=0,camFlashTimer=null;
 
-function openCameraScanner(){openCameraScannerFor('barcode-input');}
+function openCameraScanner(){openCameraScannerFor('barcode-input',true);}
 
-async function openCameraScannerFor(targetInputId){
+async function openCameraScannerFor(targetInputId,continuous=false){
   cameraTargetId=targetInputId;
+  continuousMode=continuous;
+  scanCount=0;lastScannedCode=null;lastScannedTime=0;
   document.getElementById('camera-modal').classList.add('open');
   document.getElementById('camera-status').textContent='Đang mở camera...';
   document.getElementById('camera-result').style.display='none';
+  document.getElementById('camera-continuous-badge').classList.toggle('on',continuousMode);
+  document.getElementById('camera-scan-count').classList.toggle('on',continuousMode);
+  document.getElementById('camera-scan-count').textContent='Đã quét: 0';
+  document.getElementById('camera-stop-btn').classList.toggle('show',continuousMode);
   scannerActive=true;
   try{
     if(!('BarcodeDetector' in window)){
@@ -1415,13 +1567,13 @@ async function openCameraScannerFor(targetInputId){
     cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
     const video=document.getElementById('camera-video');
     video.srcObject=cameraStream;await video.play();
-    document.getElementById('camera-status').textContent='Đưa mã vạch vào trong khung...';
+    document.getElementById('camera-status').textContent=continuousMode?'Đưa lần lượt các mã vạch vào khung...':'Đưa mã vạch vào trong khung...';
     const detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf','codabar']});
     scanInterval=setInterval(async()=>{
       if(!scannerActive)return;
       try{
         const barcodes=await detector.detect(video);
-        if(barcodes.length>0&&barcodes[0].rawValue) showCameraResult(barcodes[0].rawValue);
+        if(barcodes.length>0&&barcodes[0].rawValue) handleDetectedCode(barcodes[0].rawValue);
       }catch(e){}
     },300);
   }catch(err){
@@ -1432,26 +1584,56 @@ async function openCameraScannerFor(targetInputId){
   }
 }
 
-function showCameraResult(code){
-  scannerActive=false;clearInterval(scanInterval);
-  const el=document.getElementById('camera-result');
-  el.style.display='block';el.textContent='✓ '+code;
-  if(navigator.vibrate)navigator.vibrate(100);
-  // Điền vào đúng ô target
+function handleDetectedCode(code){
+  const now=Date.now();
+  // Chống đọc trùng cùng 1 mã trong lúc mã đó còn nằm trong khung hình
+  if(code===lastScannedCode&&now-lastScannedTime<1500)return;
+  lastScannedCode=code;lastScannedTime=now;
+  if(navigator.vibrate)navigator.vibrate(80);
+
   if(cameraTargetId==='barcode-input'){
-    // Màn hình bán hàng → xử lý như quét bình thường
-    processBarcode(code);
+    // Màn hình bán hàng / nhập hàng → xử lý như quét bình thường
+    const found=processBarcode(code);
+    flashCameraResult(code,found!==false);
+    if(continuousMode&&found!==false){
+      scanCount++;
+      document.getElementById('camera-scan-count').textContent='Đã quét: '+scanCount;
+      // Giữ camera mở, tiếp tục quét mã tiếp theo
+      return;
+    }
+    // Không ở chế độ liên tục, hoặc không tìm thấy sản phẩm → dừng và đóng
+    scannerActive=false;clearInterval(scanInterval);
+    setTimeout(()=>closeCameraScanner(),found!==false?500:900);
   } else {
-    // Ô input khác (vd: p-barcode trong modal) → điền thẳng vào
+    // Ô input khác (vd: p-barcode trong modal) → điền thẳng vào rồi đóng (không cần quét liên tục)
+    flashCameraResult(code,true);
     const input=document.getElementById(cameraTargetId);
     if(input){input.value=code;input.focus();}
+    scannerActive=false;clearInterval(scanInterval);
+    setTimeout(()=>closeCameraScanner(),500);
   }
-  setTimeout(()=>closeCameraScanner(),600);
+}
+
+function flashCameraResult(code,ok){
+  const el=document.getElementById('camera-result');
+  el.style.display='block';
+  el.style.background=ok?'var(--green-dim)':'var(--red-dim)';
+  el.style.borderColor=ok?'var(--green)':'var(--red)';
+  el.style.color=ok?'var(--green)':'var(--red)';
+  el.textContent=(ok?'✓ ':'❌ ')+code;
+  if(continuousMode){
+    clearTimeout(camFlashTimer);
+    camFlashTimer=setTimeout(()=>{ if(scannerActive)el.style.display='none'; },900);
+  }
 }
 
 function closeCameraScanner(){
-  scannerActive=false;clearInterval(scanInterval);
+  scannerActive=false;clearInterval(scanInterval);clearTimeout(camFlashTimer);
+  continuousMode=false;
   document.getElementById('camera-modal').classList.remove('open');
+  document.getElementById('camera-continuous-badge').classList.remove('on');
+  document.getElementById('camera-scan-count').classList.remove('on');
+  document.getElementById('camera-stop-btn').classList.remove('show');
   if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
   const video=document.getElementById('camera-video');
   if(video)video.srcObject=null;
